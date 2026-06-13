@@ -10,14 +10,8 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-import json
-
+from utils.loader import misc_dict
 from utils.misc import is_termux, run_system_command
-
-
-with open("config/misc.json", "r", encoding="utf-8") as config_file:
-    misc_dict = json.load(config_file)
-
 
 def notify(content, title):
     if misc_dict["hostMode"]:

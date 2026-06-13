@@ -14,19 +14,14 @@
 import asyncio
 import itertools
 import json
-import logging
 import os
 import random
 import signal
-import socket
-import sqlite3
 import threading
 import time
 import traceback
-import tomllib
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
-from threading import Thread
 
 # Third-Party Libraries
 import aiohttp
@@ -35,27 +30,45 @@ import pytz
 import requests
 from discord.ext import commands, tasks
 from discord import SyncWebhook
-from rich.align import Align
-from rich.console import Console
-from rich.panel import Panel
 from queue import Queue
 
 # Local
 import components_v2
 import database
 import utils.configs as config_models
-import utils.timestamp as utils
+import utils.state as state
 from utils.misspell import misspell_word
 from utils.notification import notify
 from utils.webhook import webhookSender
+from utils.runtime_handler import start_runtime_loop
 from utils.captcha_solver.yescaptcha import captchaClient
+from utils.bot_runner import fetch_json, run_bots
+from utils.database import create_database
 from website import web_start, website_append
+from utils.popup import popup_main_loop
 from utils.system import (
     compare_versions,
     clear,
     resource_path,
-    is_termux,
+    printBox,
+    get_local_ip,
+    misc_dict,
+    console
 )
+from utils.loader import (
+    global_settings_dict,
+    danger_settings_dict,
+    captcha_settings_dict,
+    webhook_data_dict,
+    console_width,
+    load_accounts_dict
+)
+from utils.constants import (
+    owo_dusk_api,
+    owoPanel,
+    version
+)
+from utils.battery import start_battery_check, on_mobile
 from utils.quest_helper.quest import QuestHandler, LocalQuestHandler
 
 
@@ -69,197 +82,15 @@ def handle_sigint(signal_number, frame):
 
 signal.signal(signal.SIGINT, handle_sigint)
 
-console = Console()
 lock = threading.Lock()
 clear()
 
-
-def load_accounts_dict(file_path="utils/stats.json"):  # dead code btw
-    with open(file_path, "r", encoding="utf-8") as config_file:
-        return json.load(config_file)
-
-
-with open("config/global_settings.json", "r", encoding="utf-8") as config_file:
-    global_settings_dict = config_models.configs.FetchGlobalSettings(
-        json.load(config_file)
-    )
-
-
-with open("config/misc.json", "r", encoding="utf-8") as config_file:
-    misc_dict = json.load(config_file)
-
-with open("config/webhookContent.json", "r", encoding="utf-8") as config_file:
-    webhook_data_dict = json.load(config_file)
-
-
-with open("config/captcha.toml", "rb") as f:
-    captcha_settings_dict = tomllib.load(f)
-
-with open("config/danger.toml", "rb") as f:
-    danger_settings_dict = tomllib.load(f)
-
-
-console.rule("[bold blue1]:>", style="navy_blue")
-console_width = console.size.width
 listUserIds = []
-
-owo_dusk_api = "https://echoquill.github.io/owo-dusk-api"
-
-owoArt = r"""
-  __   _  _   __       ____  _  _  ____  __ _ 
- /  \ / )( \ /  \  ___(    \/ )( \/ ___)(  / )
-(  O )\ /\ /(  O )(___)) D () \/ (\___ \ )  ( 
- \__/ (_/\_) \__/     (____/\____/(____/(__\_)
-"""
-owoPanel = Panel(Align.center(owoArt), style="purple ", highlight=False)
-version = "2.5.0"
-database_version = "2.5.0"
-
-
+webhook_handler = None
 
 """FLASK APP"""
 
-
-def printBox(text, color, title=None):
-    test_panel = Panel(text, style=color, title=title)
-    if not misc_dict["console"]["compactMode"]:
-        console.print(test_panel)
-    else:
-        console.print(text, style=color)
-
-
-on_mobile = is_termux()
-
-if not on_mobile and not misc_dict["hostMode"]:
-    try:
-        if global_settings_dict.batteryCheck.enabled:
-            import psutil
-    except Exception as e:
-        print(f"ImportError: {e}")
-
-
-# For battery check
-def batteryCheckFunc():
-    cnf = global_settings_dict.batteryCheck
-    try:
-        if on_mobile:
-            while True:
-                time.sleep(cnf.refreshInterval)
-                try:
-                    battery_status = os.popen("termux-battery-status").read()
-                except Exception as e:
-                    console.print(
-                        f"system - Battery check failed!! - {e}".center(
-                            console_width - 2
-                        ),
-                        style="red ",
-                    )
-                battery_data = json.loads(battery_status)
-                percentage = battery_data["percentage"]
-                console.print(
-                    f"system - Current battery •> {percentage}".center(
-                        console_width - 2
-                    ),
-                    style="blue ",
-                )
-                if percentage < int(cnf.minPercentage):
-                    break
-        else:
-            while True:
-                time.sleep(cnf.refreshInterval)
-                try:
-                    battery = psutil.sensors_battery()
-                    if battery is not None:
-                        percentage = int(battery.percent)
-                        console.print(
-                            f"system - Current battery •> {percentage}".center(
-                                console_width - 2
-                            ),
-                            style="blue ",
-                        )
-                        if percentage < int(cnf.minPercentage):
-                            break
-                except Exception as e:
-                    console.print(
-                        f"-system - Battery check failed!! - {e}".center(
-                            console_width - 2
-                        ),
-                        style="red ",
-                    )
-    except Exception as e:
-        print("battery check", e)
-    os._exit(0)
-
-
-if global_settings_dict.batteryCheck.enabled:
-    loop_thread = threading.Thread(target=batteryCheckFunc, daemon=True)
-    loop_thread.start()
-
-
-def popup_main_loop():
-    root = tk.Tk()
-    root.withdraw()
-
-    def check_queue():
-        if popup_queue.qsize() != 0:
-            # Should not be empty as size not 0
-            msg, username, channelname, captchatype = popup_queue.get_nowait()
-        else:
-            root.after(100, check_queue)
-            return
-
-        popup = tk.Toplevel(root)
-        popup.configure(bg="#000000")
-        popup.title("OwO-dusk - Notifs")
-
-        try:
-            icon_path = "static/imgs/logo.png"
-            icon = tk.PhotoImage(file=icon_path)
-            popup.iconphoto(True, icon)
-        except Exception as e:
-            print(f"Failed to load icon: {e}")
-
-        # Fetch screen width and height
-        screen_width = popup.winfo_screenwidth()
-        screen_height = popup.winfo_screenheight()
-
-        popup_width = min(500, int(screen_width * 0.8))
-        popup_height = min(300, int(screen_height * 0.8))
-
-        x_position = (screen_width - popup_width) // 2
-        y_position = (screen_height - popup_height) // 2
-
-        popup.geometry(f"{popup_width}x{popup_height}+{x_position}+{y_position}")
-
-        label_text = msg.format(
-            username=username, channelname=channelname, captchatype=captchatype
-        )
-
-        label = tk.Label(
-            popup,
-            text=label_text,
-            wraplength=popup_width - 40,
-            justify="left",
-            padx=20,
-            pady=20,
-            bg="#000000",
-            fg="#be7dff",
-        )
-        label.pack(fill="both", expand=True)
-
-        button = tk.Button(popup, text="OK", command=popup.destroy)
-        button.pack(pady=10)
-
-        # Directly calling these functions may cause issues
-        # popup.after helps ensure that doesn't happen
-        popup.after(0, popup.lift)
-        popup.after(0, popup.focus_force)
-
-        # Restart queue check if window destroyed
-        popup.bind("<Destroy>", lambda e: root.after(100, check_queue))
-
-    check_queue()
-    root.mainloop()
+start_battery_check()
 
 
 class MessageDispatcher:
@@ -428,13 +259,6 @@ class MyClient(commands.Bot):
                 pass
         else:
             self.presence.stop()
-
-    @tasks.loop(seconds=5)
-    async def config_update_checker(self):
-        global config_updated
-        if config_updated is not None and (time.time() - config_updated < 6):
-            await self.update_config()
-            # config_updated = False
 
     @tasks.loop(seconds=1)
     async def random_sleep(self):
@@ -702,7 +526,7 @@ class MyClient(commands.Bot):
 
     def add_popup_queue(self, channel_name, captcha_type=None):
         with lock:
-            popup_queue.put(
+            state.popup_queue.put(
                 (
                     (
                         global_settings_dict.captcha.toastOrPopup.captchaContent
@@ -778,7 +602,6 @@ class MyClient(commands.Bot):
             "author_image": "",
             "footer": ""
         }"""
-        global webhook_handler, webhook_data_dict
 
         data = webhook_data_dict.get(data_id, None)
         if not data:
@@ -1150,263 +973,7 @@ class MyClient(commands.Bot):
         if self.settings_dict.cashCheck:
             asyncio.create_task(self.check_for_cash())
 
-
-def get_local_ip():
-    if not global_settings_dict.website.enableHost:
-        return "localhost"
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-            """10.255.255.255 is fake"""
-            s.connect(("10.255.255.255", 1))
-            return s.getsockname()[0]
-    except Exception:
-        return "localhost"
-
-
-"""Handle Weekly runtime"""
-
-
-def handle_weekly_runtime(path="utils/data/weekly_runtime.json"):
-    while True:
-        try:
-            with open(path, "r", encoding="utf-8") as config_file:
-                weekly_runtime_dict = json.load(config_file)
-            weekday = utils.get_weekday()
-
-            if weekly_runtime_dict[weekday][0] == 0:
-                weekly_runtime_dict[weekday][0], weekly_runtime_dict[weekday][1] = (
-                    time.time(),
-                    time.time(),
-                )
-            else:
-                weekly_runtime_dict[weekday][1] = time.time()
-
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(weekly_runtime_dict, f, indent=4)
-
-        except Exception as e:
-            print(f"Error when handling weekly runtime:\n{e}")
-
-        # update every 15 seconds
-        time.sleep(15)
-
-
-def start_runtime_loop(path="utils/data/weekly_runtime.json"):
-    try:
-        with open(path, "r", encoding="utf-8") as config_file:
-            weekly_runtime_dict = json.load(config_file)
-
-        now = time.time()
-        last_checked = weekly_runtime_dict.get("last_checked", 0)
-
-        if now - last_checked > 604800:  # 604800 -> seconds in a week
-            for day in map(str, range(7)):
-                weekly_runtime_dict[day] = [0, 0]
-
-        weekly_runtime_dict["last_checked"] = now
-
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(weekly_runtime_dict, f, indent=4)
-
-        loop_thread = threading.Thread(target=handle_weekly_runtime, daemon=True)
-        loop_thread.start()
-
-    except Exception as e:
-        # Re-attempt here once fixing the runtime json file
-        print(f"Error when attempting to start runtime handler:\n{e}")
-
-
-"""Create SQLight database"""
-
-
-def create_database(db_path="utils/data/db.sqlite"):
-    if os.path.exists(db_path):
-        conn = sqlite3.connect(db_path)
-        c = conn.cursor()
-        try:
-            c.execute("SELECT value FROM meta_data WHERE key = 'version'")
-            row = c.fetchone()
-            current_version = row[0] if row else None
-        except sqlite3.OperationalError:
-            # Table meta_data doesn't exist yet
-            current_version = None
-        finally:
-            conn.close()
-
-        # 2. If version is wrong or missing, delete the file
-        if current_version and compare_versions(current_version, database_version):
-            console.print(
-                f"Version mismatch (Found: {current_version}, Expected: {database_version}). Recreating DB...",
-                style="orange_red1",
-            )
-            os.remove(db_path)
-
-    conn = sqlite3.connect(db_path)
-    c = conn.cursor()
-
-    c.execute(
-        "CREATE TABLE IF NOT EXISTS commands (name TEXT PRIMARY KEY, count INTEGER)"
-    )
-    c.execute(
-        "CREATE TABLE IF NOT EXISTS cowoncy_earnings (user_id TEXT, hour INTEGER, earnings INTEGER, PRIMARY KEY (user_id, hour))"
-    )
-    c.execute(
-        "CREATE TABLE IF NOT EXISTS gamble_winrate (hour INTEGER PRIMARY KEY, wins INTEGER, losses INTEGER, net INTEGER)"
-    )
-    c.execute(
-        "CREATE TABLE IF NOT EXISTS user_stats (user_id TEXT PRIMARY KEY, daily REAL, lottery REAL, cookie REAL, giveaways REAL, captchas INTEGER, cowoncy INTEGER, boss REAL, boss_ticket INTEGER, pup INTEGER, piku INTEGER, army INTEGER)"
-    )
-    c.execute(
-        "CREATE TABLE IF NOT EXISTS meta_data (key TEXT PRIMARY KEY, value INTEGER)"
-    )
-    c.execute(
-        "CREATE TABLE IF NOT EXISTS command_priority (user_id TEXT, command_name TEXT, priority INTEGER, PRIMARY KEY (user_id, command_name))"
-    )
-    # Switch to WAL mode.
-    c.execute("PRAGMA journal_mode=WAL;")
-
-    # Populate
-    # -- gamble_winrate
-    for hr in range(24):
-        # hour does not have 24 in 24 hr format!!
-        c.execute(
-            "INSERT OR IGNORE INTO gamble_winrate (hour, wins, losses, net) VALUES (?, ?, ?, ?)",
-            (hr, 0, 0, 0),
-        )
-
-    # -- meta data
-    c.execute(
-        "INSERT OR IGNORE INTO meta_data (key, value) VALUES (?, ?)",
-        ("gamble_winrate_last_checked", 0),
-    )
-    c.execute(
-        "INSERT OR IGNORE INTO meta_data (key, value) VALUES (?, ?)",
-        ("cowoncy_earnings_last_checked", 0),
-    )
-
-    # `INSERT OR UPDATE` is not used since we will be comparing old value (if any) ------ (check!!)
-    c.execute(
-        "INSERT OR IGNORE INTO meta_data (key, value) VALUES (?, ?)",
-        ("version", version),
-    )
-
-    c.execute(
-        "INSERT OR IGNORE INTO meta_data (key, value) VALUES (?, ?)",
-        ("event_till_timestamp", 0),
-    )
-
-    # -- command priority
-    c.execute("SELECT * FROM command_priority WHERE user_id = ?", ("default",))
-    rows = c.fetchall()
-    populate = False
-    if not rows:
-        populate = True
-
-    if not populate:
-        # 0 -> user_id
-        # 1 -> command_name
-        # 2 -> priority
-        temp_list = [(row[1], int(row[2])) for row in rows]
-        for key, value in misc_dict["command_info"].items():
-            if (key, value["priority"]) not in temp_list:
-                c.execute("DELETE FROM command_priority")
-                populate = True
-                break
-
-    if populate:
-        for key, value in misc_dict["command_info"].items():
-            # We will be putting a `DEFAULT` value here to make it easier to compare to misc.json.
-            # This is to ensure we do update in two cases:
-            # 1) when priority is changed
-            # 3) when a new item is added to priority
-            c.execute(
-                "INSERT OR IGNORE INTO command_priority (user_id, command_name, priority) VALUES (?, ?, ?)",
-                ("default", key, value.get("priority")),
-            )
-
-    # -- commands
-    for cmd in misc_dict["command_info"].keys():
-        c.execute(
-            "INSERT OR IGNORE INTO commands (name, count) VALUES (?, ?)", (cmd, 0)
-        )
-
-    # -- end --#
-    conn.commit()
-    conn.close()
-
-
 # ----------STARTING BOT----------#
-def fetch_json(url, description="data"):
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        return response.json()
-    except requests.RequestException as e:
-        printBox(f"Failed to fetch {description}: {e}", "bold red")
-        return {}
-
-
-def warnings():
-    if danger_settings_dict["allow_auto_quest"]:
-        console.print(
-            "Be Warned that auto quest is still in experimental mode",
-            style="orange_red1",
-        )
-    if danger_settings_dict["allow_quotes"]:
-        console.print(
-            "Be Warned that quotes are seen as a common sign of selfbots. It isnt that effective either",
-            style="orange_red1",
-        )
-
-
-def run_bots(tokens_and_channels):
-    threads = []
-    for token, channel_id in tokens_and_channels:
-        thread = Thread(
-            target=run_bot,
-            args=(token, channel_id, global_settings_dict, len(tokens_and_channels)),
-        )
-        thread.start()
-        threads.append(thread)
-    for thread in threads:
-        thread.join()
-
-
-def run_bot(token, channel_id, global_settings_dict, token_len):
-    try:
-        logging.getLogger("discord.client").setLevel(logging.ERROR)
-
-        while True:
-            client = MyClient(token, channel_id, global_settings_dict, token_len)
-
-            if not on_mobile:
-                try:
-                    client.run(token, log_level=logging.ERROR)
-
-                    """except CurlError as e:
-                    if "WS_SEND" in str(e) and "55" in str(e):
-                        printBox("Broken pipe error detected. Restarting bot...", "bold red")
-                        # Restart the loop with a new client instance.
-                        continue 
-                    else:
-                        printBox(f"Curl error: {e}", "bold red")
-                        # Don't retry unknown curl errors.
-                        break """
-                except Exception as e:
-                    printBox(f"Unknown error when running bot: {e}", "bold red")
-
-            else:
-                # Mobile (Termux) uses an older version without curl_cffi.
-                # No need to handle error in such cases.
-                try:
-                    client.run(token, log_level=logging.ERROR)
-                except Exception as e:
-                    printBox(f"Unknown error when running bot: {e}", "bold red")
-                break
-
-    except Exception as e:
-        printBox(f"Error starting bot: {e}", "bold red")
-
 
 if __name__ == "__main__":
     notify(
@@ -1533,12 +1100,7 @@ if __name__ == "__main__":
         and not on_mobile
         and not misc_dict["hostMode"]
     ):
-        try:
-            import tkinter as tk
-        except Exception as e:
-            print(f"ImportError: {e}")
-
-        popup_queue = Queue()
+        state.popup_queue = Queue()
 
         bot_threads = threading.Thread(target=run_bots, args=(tokens_and_channels,))
         bot_threads.daemon = True

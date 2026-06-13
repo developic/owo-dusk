@@ -13,9 +13,12 @@
 import os
 import sys
 import subprocess
+import socket
+
+from utils.loader import console, misc_dict, global_settings_dict
+from rich.panel import Panel
 
 from utils.colors import COLORS
-
 
 def compare_versions(current_version, latest_version):
     current_version = current_version.lstrip("v")
@@ -77,3 +80,21 @@ def install_termux_package(package_name: str, display_name: str | None = None):
             f"{COLORS.BOLD_RED}[x]Error when trying to install {name}:\n{e}{COLORS.RESET}"
         )
         return False
+
+def printBox(text, color, title=None):   
+    test_panel = Panel(text, style=color, title=title)
+    if not misc_dict["console"]["compactMode"]:
+        console.print(test_panel)
+    else:
+        console.print(text, style=color)
+
+def get_local_ip():
+    if not global_settings_dict.website.enableHost:
+        return "localhost"
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            """10.255.255.255 is fake"""
+            s.connect(("10.255.255.255", 1))
+            return s.getsockname()[0]
+    except Exception:
+        return "localhost"
