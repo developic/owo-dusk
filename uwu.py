@@ -79,9 +79,6 @@ def handle_sigint(signal_number, frame):
     print("\nCtrl+C detected. stopping code!")
     os._exit(0)
 
-
-signal.signal(signal.SIGINT, handle_sigint)
-
 lock = threading.Lock()
 clear()
 
@@ -976,6 +973,7 @@ class MyClient(commands.Bot):
 # ----------STARTING BOT----------#
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGINT, handle_sigint)
     notify(
         "OwO-Dusk starting... If any issue arises visit out discord support server (link available in console or github)",
         "Starting OwO-Dusk! :>",
