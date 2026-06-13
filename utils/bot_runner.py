@@ -15,7 +15,7 @@ def fetch_json(url, description="data"):
         return {}
 
 def run_bot(token, channel_id, global_settings_dict, token_len):
-    from uwu import MyClient
+    from client import MyClient
     try:
         logging.getLogger("discord.client").setLevel(logging.ERROR)
 
