@@ -1,6 +1,7 @@
 import sqlite3
 import os
-from utils.loader import misc_dict, console, database_version, version
+from utils.loader import misc_dict, console
+from utils.constants import database_version, version
 from utils.system import compare_versions
 
 def create_database(db_path="utils/data/db.sqlite"):
