@@ -84,6 +84,7 @@ clear()
 
 listUserIds = []
 webhook_handler = None
+hcaptcha_solver = None
 
 """FLASK APP"""
 
