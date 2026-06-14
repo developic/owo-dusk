@@ -29,7 +29,6 @@ from utils.captcha_solver.yescaptcha import captchaClient
 from utils.bot_runner import fetch_json, run_bots
 from utils.database import create_database
 from website import web_start
-from utils.popup import popup_main_loop
 from utils.system import (
     compare_versions,
     clear,
@@ -195,6 +194,7 @@ if __name__ == "__main__":
         and not on_mobile
         and not misc_dict["hostMode"]
     ):
+        from utils.popup import popup_main_loop
         state.popup_queue = Queue()
 
         bot_threads = threading.Thread(target=run_bots, args=(tokens_and_channels,))
