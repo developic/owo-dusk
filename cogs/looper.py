@@ -231,7 +231,11 @@ class Looper(BaseCog):
 
         await self.bot.put_queue(cmd)
         self.startup = False
-        await self.block_till_send(self.bot.settings_dict.prefix + cmd["cmd_name"])
+        full_content = self.bot.settings_dict.prefix + cmd["cmd_name"]
+        if cmd["cmd_arguments"]:
+            full_content += f" {cmd['cmd_arguments']}"
+
+        await self.block_till_send(full_content, channel_id=cmd.get("channel"))
 
         if quest_cnf["enabled"]:
             self.bot.quest_help_request[cmd_name]["till"] -= 1

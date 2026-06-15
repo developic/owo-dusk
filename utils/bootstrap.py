@@ -8,6 +8,11 @@ def ensure_files():
     created = []
     os.makedirs(os.path.join(BASE_DIR, "config"), exist_ok=True)
     os.makedirs(os.path.join(BASE_DIR, "utils", "data"), exist_ok=True)
+    stats_path = os.path.join(BASE_DIR, "utils", "data", "stats.json")
+    if not os.path.exists(stats_path):
+        with open(stats_path, "w") as f:
+            f.write("{}")
+        created.append(os.path.relpath(stats_path, BASE_DIR))
 
     template_files = {
         os.path.join(BASE_DIR, "templates", "tokens.txt"):
