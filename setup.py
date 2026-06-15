@@ -10,9 +10,15 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
+import os
+import shutil
 import sys
 import subprocess
 import tomllib
+
+# must run before other imports as other utils use the global_settings.json etc files
+from utils.bootstrap import ensure_files
+created_files = ensure_files()
 
 from utils.colors import COLORS
 
@@ -23,11 +29,24 @@ from utils.system import (
     is_termux,
 )
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 try:
     clear()
 except Exception:
     pass
 
+for file in created_files:
+    print(f"{COLORS.BOLD_CYAN}Created {file}{COLORS.RESET}")
+
+
+def ensure_user_settings(user_id):
+    src = os.path.join(BASE_DIR, "config", "settings.json")
+    dst = os.path.join(BASE_DIR, "config", f"{user_id}.settings.json")
+
+    if not os.path.exists(dst):
+        shutil.copy2(src, dst)
+        print(f"Created {user_id}.settings.json")
 
 def load_json_dict(file_path="config/captcha.toml"):
     with open(file_path, "rb") as config_file:
@@ -145,6 +164,7 @@ async def collect_tokens(token_count):
                 "valid": False,
                 "channel_found": False,
                 "channel": None,
+                "user_id": None,
             }
 
             @client.event
@@ -152,6 +172,9 @@ async def collect_tokens(token_count):
                 print(
                     f"{COLORS.BOLD_GREEN}[✓] Received token for - {client.user.name} ({client.user.id}){COLORS.RESET}"
                 )
+
+                result["user_id"] = str(client.user.id)
+
                 try:
                     channel = client.get_channel(channelinput)
                     result["valid"] = True
@@ -168,9 +191,13 @@ async def collect_tokens(token_count):
 
             await client.start(token)
 
-            return result["valid"], (
-                result["channel_found"],
-                result["channel"],
+            return (
+                result["valid"],
+                    (
+                        result["channel_found"],
+                        result["channel"],
+                    ),
+                result["user_id"],
             )
 
         except discord.LoginFailure:
@@ -226,7 +253,7 @@ async def collect_tokens(token_count):
                 validtoken = False
                 validchannel = (False, None)
                 try:
-                    validtoken, validchannel = await validate_token(
+                    validtoken, validchannel, user_id = await validate_token(
                         tokeninput, channelinput
                     )
                 except Exception as e:
@@ -247,7 +274,7 @@ async def collect_tokens(token_count):
                     )
 
             if validtoken and validchannel[0]:
-                collected.append((tokeninput, channelinput))
+                collected.append((tokeninput, channelinput, user_id))
                 break
             else:
                 print(
@@ -317,7 +344,8 @@ try:
         pass
 
     duplicates = 0
-    for tokeninput, channelinput in collected_tokens:
+    for tokeninput, channelinput, user_id in collected_tokens:
+        ensure_user_settings(user_id)
         if tokeninput in existing_tokens:
             print(
                 f"{COLORS.BOLD_YELLOW}[!]Token for account already exists in tokens.txt, skipping.{COLORS.RESET}"
