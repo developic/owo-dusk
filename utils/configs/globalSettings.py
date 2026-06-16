@@ -252,5 +252,10 @@ class ChannelSwitcher:
 
 class User:
     def __init__(self, d: dict):
-        self.userid = d.get("userid")
-        self.channels = d.get("channels", [])
+        self.userid = int(d.get("userid"))
+        self.channels = []
+        for ch in d.get("channels", []):
+            try:
+                self.channels.append(int(ch))
+            except (ValueError, TypeError):
+                print(f"[Configuration error] Skipping invalid channel ID: {ch!r} (expected an integer)")
