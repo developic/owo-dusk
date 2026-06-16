@@ -1,11 +1,19 @@
 import json
+import os
 import utils.configs as config_models
 import tomllib
 from rich.console import Console
 
-def load_accounts_dict(file_path="utils/stats.json"):  # dead code btw
-    with open(file_path, "r", encoding="utf-8") as config_file:
-        return json.load(config_file)
+def load_accounts_dict(file_path="utils/stats.json"):
+    try:
+        with open(file_path, "r", encoding="utf-8") as config_file:
+            return json.load(config_file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        # Override incase of errors
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, "w", encoding="utf-8") as config_file:
+            json.dump({}, config_file)
+        return {}
 
 
 with open("config/global_settings.json", "r", encoding="utf-8") as config_file:
