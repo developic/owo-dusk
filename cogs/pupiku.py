@@ -139,7 +139,7 @@ class Pupiku(BaseCog):
             self.startupFinished = True
             await self.send_pupiku(cmd=cmd, final=final)
             return
-        else:
+        elif cmd:
             print(f"{self.bot.user.name} - failed re-queue {cmd}")
 
         cmd = ""
