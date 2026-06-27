@@ -11,6 +11,7 @@
 # (at your option) any later version.
 
 import re
+
 from utils.image_to_text import image_to_text
 
 
@@ -20,7 +21,7 @@ def int_gap(x: int, x2: int, mingap: int, maxgap: int) -> bool:
 
 
 def extract_quests(ocr_results: list) -> list[dict]:
-    PROGRESS_PATTERN = re.compile(r"^\d+/\d+$")
+    progress_pattern = re.compile(r"^\d+/\d+$")
 
     # Identify potential quest text and progress items
     progress_items = []
@@ -29,7 +30,7 @@ def extract_quests(ocr_results: list) -> list[dict]:
     for item in ocr_results:
         text = item["text"]  # unwrap the set
 
-        if PROGRESS_PATTERN.match(text.replace(",", "")):
+        if progress_pattern.match(text.replace(",", "")):
             progress_items.append(item)
         elif len(text) > 4:
             quest_candidates.append(item)

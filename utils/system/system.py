@@ -11,15 +11,18 @@
 # (at your option) any later version.
 
 import os
-import sys
-import subprocess
 import socket
+import subprocess
+import sys
+import threading
+import time
 
-from utils.loader import console, misc_dict, global_settings_dict
 from rich.panel import Panel
 
-from utils.errors import suppress_and_log
 from utils.colors import COLORS
+from utils.errors import suppress_and_log
+from utils.loader import console, global_settings_dict, misc_dict
+
 
 @suppress_and_log("Comparing Version")
 def compare_versions(current_version, latest_version):
@@ -44,11 +47,13 @@ def compare_versions(current_version, latest_version):
 def clear():
     os.system("cls") if os.name == "nt" else os.system("clear")
 
+
 @suppress_and_log("Getting Resource Path")
 def resource_path(relative_path):
     if hasattr(sys, "_MEIPASS"):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
+
 
 @suppress_and_log("Checking if Termux")
 def is_termux():
@@ -61,6 +66,10 @@ def is_termux():
         return True
     else:
         return os.path.isdir("/data/data/com.termux")
+
+
+on_mobile = is_termux()
+
 
 @suppress_and_log("Installing package")
 def install_package(*args):
@@ -85,12 +94,37 @@ def install_termux_package(package_name: str, display_name: str | None = None):
         return False
 
 
-def printBox(text, color, title=None):   
+@suppress_and_log("Running system command")
+def run_system_command(command, timeout, retry=False, delay=5):
+    def target():
+        try:
+            os.system(command)
+        except Exception as e:
+            print(f"Error executing command: {command} - {e}")
+
+    # Create and start a thread to execute the command
+    thread = threading.Thread(target=target)
+    thread.start()
+
+    # Wait for the thread to finish, with a timeout
+    thread.join(timeout)
+
+    # If the thread is still alive after the timeout, terminate it
+    if thread.is_alive():
+        print(f"Error: {command} command failed! (captcha)")
+        if retry:
+            print(f"Retrying '{command}' after {delay}s")
+            time.sleep(delay)
+            run_system_command(command, timeout)
+
+
+def print_box(text, color, title=None):
     test_panel = Panel(text, style=color, title=title)
     if not misc_dict["console"]["compactMode"]:
         console.print(test_panel)
     else:
         console.print(text, style=color)
+
 
 def get_local_ip():
     if not global_settings_dict.website.enableHost:

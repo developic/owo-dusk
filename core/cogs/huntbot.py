@@ -16,9 +16,9 @@ import re
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
 
-from utils.huntBotSolver import solveHbCaptcha
-from utils.hbCalc import allocate_essence
 from core.cogs._BASE import BaseCog
+from utils.hbCalc import allocate_essence
+from utils.huntBotSolver import solve_hb_captcha
 
 password_reset_regex = r"(?<=Password will reset in )(\d+)"
 huntbot_time_regex = r"(\d+)([DHM])"
@@ -160,7 +160,9 @@ class Huntbot(BaseCog):
                 self.upgrade_event.set()
                 await self.bot.remove_queue(id="upgrade")
             elif "Here is your password!" in message.content:
-                ans = await solveHbCaptcha(message.attachments[0].url, self.bot.session)
+                ans = await solve_hb_captcha(
+                    message.attachments[0].url, self.bot.session
+                )
                 await self.bot.log(
                     "huntbot received password, attempting to solve!", "#afaf87"
                 )

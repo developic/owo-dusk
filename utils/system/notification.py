@@ -11,14 +11,13 @@
 # (at your option) any later version.
 
 from utils.loader import misc_dict
-from utils.misc import is_termux, run_system_command
+from utils.system.system import on_mobile, run_system_command
+
 
 def notify(content, title):
     if misc_dict["hostMode"]:
         # Notification isn't supported in hosts and will trigger crash if unhandled
         return
-
-    on_mobile = is_termux()
 
     if on_mobile:
         run_system_command(

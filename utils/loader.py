@@ -18,6 +18,7 @@ from rich.console import Console
 
 import utils.configs as config_models
 
+
 def load_accounts_dict(file_path="utils/stats.json"):
     try:
         with open(file_path, "r", encoding="utf-8") as config_file:

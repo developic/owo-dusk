@@ -10,12 +10,14 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-import sqlite3
 import os
-from utils.loader import misc_dict, console
+import sqlite3
+
 from utils.constants import database_version, version
-from utils.system import compare_versions
 from utils.errors import suppress_and_log
+from utils.loader import console, misc_dict
+from utils.system.system import compare_versions
+
 
 @suppress_and_log("Database Initialisation")
 def create_database(db_path="utils/data/db.sqlite"):

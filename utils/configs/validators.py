@@ -11,7 +11,7 @@
 # (at your option) any later version.
 
 
-def validateCooldown(cd: list):
+def validate_cooldown(cd: list):
     """
     Checks if the cooldown provided is a valid cooldown list or not
     If not valid, the function raises ValueError
@@ -31,7 +31,7 @@ def validateCooldown(cd: list):
         raise ValueError("Both min and max cooldown same..")
 
 
-def validateFrequency(freq):
+def validate_frequency(freq):
     """
     Ensures frequency is within 0 to 100
     If not valid, the function raises ValueError

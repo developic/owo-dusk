@@ -10,9 +10,10 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-import aiohttp
 import asyncio
 import re
+
+import aiohttp
 
 
 async def get_text_from_url(
@@ -108,11 +109,11 @@ async def get_text_from_url(
 
 
 async def main():
-    MY_API_KEY = ""
-    TARGET_IMAGE_URL = "https://media.discordapp.net/attachments/989702438317617173/1513592357340319955/reward.png?ex=6a284a3b&is=6a26f8bb&hm=b700db12bb6945492f103ad412576083510ab276a60783503720cb4b0ea6b2e8&=&format=webp&quality=lossless"
+    my_api_key = ""
+    target_image_url = "https://media.discordapp.net/attachments/989702438317617173/1513592357340319955/reward.png?ex=6a284a3b&is=6a26f8bb&hm=b700db12bb6945492f103ad412576083510ab276a60783503720cb4b0ea6b2e8&=&format=webp&quality=lossless"
 
     async with aiohttp.ClientSession() as session:
-        await get_text_from_url(TARGET_IMAGE_URL, session, api_key=MY_API_KEY)
+        await get_text_from_url(target_image_url, session, api_key=my_api_key)
 
 
 if __name__ == "__main__":

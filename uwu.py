@@ -18,54 +18,43 @@ import threading
 # Third-Party Libraries
 import discord
 from discord import SyncWebhook
-from queue import Queue
-
-# Local
-import utils.state as state
-
-from core.bot_runner import fetch_json, run_bots
-from utils.notification import notify
-from utils.webhook import webhookSender
-from utils.runtime_handler import start_runtime_loop
-from utils.captcha_solver.yescaptcha import captchaClient
-from utils.database import create_database
-from website import web_start
-from utils.errors import suppress_and_log, suppress_and_log_block
-
-from utils.system import (
-    compare_versions,
-    clear,
-    printBox,
-    get_local_ip,
-    misc_dict,
-    console,
-)
-from utils.loader import (
-    global_settings_dict,
-    captcha_settings_dict,
-    console_width,
-)
-from utils.constants import owo_dusk_api, owoPanel, version
-from utils.battery import start_battery_check, on_mobile
-from utils.quest_helper.quest import QuestHandler
 
 import core.client as client
+
+# Local
+import utils.system as syst
+from core.bot_runner import fetch_json, run_bots
+from utils.captcha_solver.yescaptcha import captchaClient
+from utils.constants import owo_dusk_api, owo_panel, version
+from utils.database import create_database
+from utils.errors import suppress_and_log, suppress_and_log_block
+from utils.loader import (
+    captcha_settings_dict,
+    console_width,
+    global_settings_dict,
+    misc_dict,
+)
+from utils.quest_helper.quest import QuestHandler
+from utils.runtime_handler import start_runtime_loop
+from utils.webhook import webhookSender
+from website import web_start
 
 
 def handle_sigint(signal_number, frame):
     print("\nCtrl+C detected. stopping code!")
     os._exit(0)
 
+
 @suppress_and_log("Setup Service")
 def setup_and_start_services():
     # clear console
-    clear()
+    syst.system.clear()
 
     # Sets up CTRL+C detection
     signal.signal(signal.SIGINT, handle_sigint)
 
     # Start battery check service
-    start_battery_check()
+    syst.battery.start_battery_check()
 
     # Create database or modify if required
     create_database()
@@ -87,35 +76,37 @@ def setup_and_start_services():
         )
         web_thread.start()
         # get ip
-        ip = get_local_ip()
-        printBox(
+        ip = syst.system.get_local_ip()
+        syst.system.print_box(
             f"Website Dashboard: http://{ip}:{global_settings_dict.website.port}".center(
                 console_width - 2
             ),
             "dark_magenta",
         )
 
+
 @suppress_and_log("Version Check")
 def notify_version_changes():
     # Detect updates and notify
     version_json = fetch_json(f"{owo_dusk_api}/version.json", "version info")
-    if compare_versions(version, version_json["version"]):
-        printBox(
+    if syst.system.compare_versions(version, version_json["version"]):
+        syst.system.print_box(
             f"""Update Detected - {version_json["version"]}
     Changelog:
         {version_json["changelog"]}""",
             "bold gold3",
         )
-        notify(
+        syst.notification.notify(
             f"Content: {version_json['changelog']}",
             f"New Update detected: {version_json['version']}",
         )
         if version_json["important_update"]:
-            printBox("It is recommended to update....", "bold light_yellow3")
+            syst.system.print_box("It is recommended to update....", "bold light_yellow3")
+
 
 @suppress_and_log("Ask To Star Repo")
 def ask_to_star_repo():
-    console.print(
+    syst.system.console.print(
         "Won't you take 5~ minutes of your time, from the countless minutes saved by owodusk - to star its GitHub Repo? Thankyou!",
         style="navajo_white1",
     )
@@ -137,13 +128,13 @@ def ask_to_star_repo():
 
 
 def start_owodusk():
-    notify(
+    syst.notification.notify(
         "OwO-Dusk starting... If any issue arises visit out discord support server (link available in console or github)",
         "Starting OwO-Dusk! :>",
     )
     if not misc_dict["console"]["compactMode"]:
-        console.print(owoPanel)
-        console.rule(f"[bold blue1]version - {version}", style="navy_blue")
+        syst.system.console.print(owo_panel)
+        syst.system.console.rule(f"[bold blue1]version - {version}", style="navy_blue")
 
     # Version Check
     notify_version_changes()
@@ -155,13 +146,15 @@ def start_owodusk():
     ]
     token_len = len(tokens_and_channels)
 
-    printBox(f"-Received {token_len} tokens.".center(console_width - 2), "bold magenta")
+    syst.system.print_box(
+        f"-Received {token_len} tokens.".center(console_width - 2), "bold magenta"
+    )
 
     if misc_dict["news"]:
         with suppress_and_log_block("Fetch News"):
             news_json = fetch_json(f"{owo_dusk_api}/news.json", "news")
             if news_json.get("available"):
-                printBox(
+                syst.system.print_box(
                     f"{news_json.get('content', 'no content found..? this is an error! should be safe to ignore')}".center(
                         console_width - 2
                     ),
@@ -172,7 +165,7 @@ def start_owodusk():
     if not misc_dict["console"]["hideStarRepoMessage"]:
         ask_to_star_repo()
 
-    console.rule(style="navy_blue")
+    syst.system.console.rule(style="navy_blue")
 
     client.webhook_handler = webhookSender(global_settings_dict.webhook.webhookUrl)
     client.global_quest_handler = QuestHandler(api=global_settings_dict.ocrApi)
@@ -181,7 +174,7 @@ def start_owodusk():
         captcha_settings_dict["image_solver"]["enabled"]
         or captcha_settings_dict["hcaptcha_solver"]["enabled"]
     ):
-        console.print(
+        syst.system.console.print(
             "Be Warned, Captcha solving is not well tested.. You are using on your own risk..",
             style="orange_red1",
         )
@@ -191,28 +184,26 @@ def start_owodusk():
                 captcha_settings_dict["hcaptcha_solver"]["api_key"]
             )
             if client.hcaptcha_solver.balance == 0:
-                console.print(
+                syst.system.console.print(
                     "Yescaptcha API has no balance...",
                     style="orange_red1",
                 )
                 os._exit(0)
             else:
                 bal = client.hcaptcha_solver.balance
-                console.print(
+                syst.system.console.print(
                     f"Yescaptcha API has a balance of {bal}, which is approximately {round(bal / 30)} hcaptcha solves.",
                     style="tan",
                 )
 
     if (
         global_settings_dict.captcha.toastOrPopup
-        and not on_mobile
+        and not syst.system.on_mobile
         and not misc_dict["hostMode"]
     ):
         # In MacOS, for Popup to work correctly, it must be ran through
         # The main loop. For that reason, `run_bots` are ran through a thread
-        from utils.popup import popup_main_loop
-
-        state.popup_queue = Queue()
+        from utils.system.popup import popup_main_loop
 
         bot_threads = threading.Thread(target=run_bots, args=(tokens_and_channels,))
         bot_threads.daemon = True

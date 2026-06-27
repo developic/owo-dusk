@@ -1,11 +1,12 @@
 import json
-import time
 import threading
-import utils.timestamp as utils
+import time
 
+import utils.timestamp as utils
 from utils.errors import suppress_and_log
 
 path = "utils/data/weekly_runtime.json"
+
 
 @suppress_and_log("Weekly Runtime Updater")
 def handle_weekly_runtime(path="utils/data/weekly_runtime.json"):
@@ -27,6 +28,7 @@ def handle_weekly_runtime(path="utils/data/weekly_runtime.json"):
         # update every 15 seconds
         time.sleep(15)
 
+
 @suppress_and_log("Weekly Runtime Update Starter")
 def start_runtime_loop(path="utils/data/weekly_runtime.json"):
     with open(path, "r", encoding="utf-8") as config_file:
@@ -46,5 +48,3 @@ def start_runtime_loop(path="utils/data/weekly_runtime.json"):
 
     loop_thread = threading.Thread(target=handle_weekly_runtime, daemon=True)
     loop_thread.start()
-
-

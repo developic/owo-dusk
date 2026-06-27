@@ -10,21 +10,20 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-import time
-import re
-import os
-import sys
 import asyncio
+import os
+import re
+import sys
+import time
 import tomllib
 
-from discord.ext import commands, tasks
 from discord import DMChannel
+from discord.ext import commands, tasks
 
-from utils.misc import is_termux, run_system_command
-from utils.notification import notify
-from utils.timestamp import validate_snowflake
 from core.cogs._BASE import BaseCog
-
+from utils.system.notification import notify
+from utils.system.system import on_mobile, run_system_command
+from utils.timestamp import validate_snowflake
 
 list_captcha = ["human", "captcha", "link", "letterword"]
 
@@ -49,8 +48,6 @@ def get_path(path):
 def clean(msg):
     return re.sub(r"[^a-zA-Z0-9]", "", msg)
 
-
-on_mobile = is_termux()
 
 if not on_mobile:
     # desktop

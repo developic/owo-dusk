@@ -10,11 +10,12 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-import sqlite3
-import random
-import logging
-import sys
 import json
+import logging
+import random
+import sqlite3
+import sys
+
 from flask import Flask, jsonify, render_template, request
 
 from utils.timestamp import get_weekday
@@ -236,21 +237,21 @@ def fetch_weekly_runtime():
         ), 500
 
 
-def web_start(port, shouldHost, ver, paswd):
+def web_start(port, should_host, ver, paswd):
     # Set global variables with respective values
     global password, version
     password = paswd
     version = ver
     # Start the webserver
-    flaskLog = logging.getLogger("werkzeug")
-    flaskLog.disabled = True
+    flask_log = logging.getLogger("werkzeug")
+    flask_log.disabled = True
     cli = sys.modules["flask.cli"]
     cli.show_server_banner = lambda *x: None
     app.run(
         debug=False,
         use_reloader=False,
         port=port,
-        host="0.0.0.0" if shouldHost else "127.0.0.1",
+        host="0.0.0.0" if should_host else "127.0.0.1",
     )
 
 

@@ -10,10 +10,11 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-import aiohttp
-import time
-import random
 import asyncio
+import random
+import time
+
+import aiohttp
 
 
 def generate_nonce() -> str:

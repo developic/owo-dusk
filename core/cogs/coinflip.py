@@ -10,15 +10,14 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-import re
 import asyncio
+import re
 
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
 
-from utils.notification import notify
 from core.cogs._BASE import BaseCog
-
+from utils.system.notification import notify
 
 won_pattern = r"you won \*\*<:cowoncy:\d+> ([\d,]+)"
 lose_pattern = r"spent \*\*<:cowoncy:\d+> ([\d,]+)"

@@ -13,8 +13,9 @@
 import asyncio
 
 from discord.ext import commands
-from utils.notification import notify
+
 from core.cogs._BASE import BaseCog
+from utils.system.notification import notify
 
 
 class Battle(BaseCog):

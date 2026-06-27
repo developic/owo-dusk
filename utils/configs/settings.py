@@ -19,8 +19,8 @@ import random
 from utils.configs import validators
 
 
-def GET_CD(cd: list):
-    validators.validateCooldown(cd)
+def get_cd(cd: list):
+    validators.validate_cooldown(cd)
     return random.uniform(cd[0], cd[1])
 
 
@@ -111,7 +111,7 @@ class AutoQuest:
         self.checkCooldown = d.get("checkCooldown", [])
 
     def get_cd(self):
-        return GET_CD(self.checkCooldown)
+        return get_cd(self.checkCooldown)
 
 
 class CustomCommands:
@@ -198,7 +198,7 @@ class ReactionBot:
         self.cooldown = d.get("cooldown", None)
 
     def get_cd(self):
-        return GET_CD(self.cooldown)
+        return get_cd(self.cooldown)
 
 
 class Misspell:
@@ -208,7 +208,7 @@ class Misspell:
         self.baseDelay = d.get("baseDelay", None)
         self.rectificationTime = d.get("errorRectificationTimePerLetter", None)
 
-        validators.validateFrequency(self.frequency)
+        validators.validate_frequency(self.frequency)
 
     def should_misspell(self):
         random_num = random.randint(1, 100)
@@ -222,7 +222,7 @@ class Sleep:
         self.checkTime = d.get("checkTime", None)
         self.sleeptime = d.get("sleepTime", None)
 
-        validators.validateFrequency(self.frequency)
+        validators.validate_frequency(self.frequency)
 
     def should_sleep(self):
         random_num = random.randint(1, 100)
@@ -249,7 +249,7 @@ class Giveaway:
         self.channels = d.get("channelsToJoin", [])
 
     def get_cd(self):
-        return GET_CD(self.cooldown)
+        return get_cd(self.cooldown)
 
 
 class BossBattle:
@@ -297,7 +297,7 @@ class GambleItem:
             self.options = CoinflipOptions(cf_options)
 
     def get_cd(self):
-        return GET_CD(self.cooldown)
+        return get_cd(self.cooldown)
 
 
 class CoinflipOptions:
@@ -367,7 +367,7 @@ class Command:
         self.prioritise = d.get("prioritise", False)
 
     def get_cd(self):
-        return GET_CD(self.cooldown)
+        return get_cd(self.cooldown)
 
 
 class Lottery:
@@ -383,7 +383,7 @@ class Animal:
         self.cooldown = d.get("cooldown", None)
 
     def get_cd(self):
-        return GET_CD(self.cooldown)
+        return get_cd(self.cooldown)
 
 
 class AnimalSellSac:
@@ -441,7 +441,7 @@ class ShopCommand:
         self.items = ShopItems(d.get("itemsToBuy", {}))
 
     def get_cd(self):
-        return GET_CD(self.cooldown)
+        return get_cd(self.cooldown)
 
     def get_price_and_id(self, ring):
         for idx, (name, price) in enumerate(RING_PRICES, start=1):
@@ -505,7 +505,7 @@ class HuntbotUpgrader:
         self.weights = HuntbotWeights(d.get("weights", {}))
 
     def get_cd(self):
-        return GET_CD(self.sleeptime)
+        return get_cd(self.sleeptime)
 
     def get_enabled_traits(self):
         enabled_traits = []

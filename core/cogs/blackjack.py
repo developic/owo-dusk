@@ -16,8 +16,8 @@ import re
 from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
 
-from utils.notification import notify
 from core.cogs._BASE import BaseCog
+from utils.system.notification import notify
 
 
 def find_optimal_move(e_hand, u_hand, soft=False):

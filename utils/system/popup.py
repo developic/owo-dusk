@@ -11,16 +11,22 @@
 # (at your option) any later version.
 
 import tkinter as tk
-import utils.state as state
+from queue import Queue
 
+from utils.errors import suppress_and_log
+from utils.loader import global_settings_dict
+
+popup_queue = Queue()
+
+@suppress_and_log("Popup Queue")
 def popup_main_loop():
     root = tk.Tk()
     root.withdraw()
 
     def check_queue():
-        if state.popup_queue.qsize() != 0:
+        if popup_queue.qsize() != 0:
             # Should not be empty as size not 0
-            msg, username, channelname, captchatype = state.popup_queue.get_nowait()
+            msg, username, channelname, captchatype = popup_queue.get_nowait()
         else:
             root.after(100, check_queue)
             return
@@ -78,3 +84,17 @@ def popup_main_loop():
     check_queue()
     root.mainloop()
 
+@suppress_and_log("Adding to Popup queue")
+def add_popup_queue(self, channel_name, captcha_type=None):
+    popup_queue.put(
+        (
+            (
+                global_settings_dict.captcha.toastOrPopup.captchaContent
+                if captcha_type != "Ban"
+                else global_settings_dict.captcha.toastOrPopup.bannedContent
+            ),
+            self.user.name,
+            channel_name,
+            captcha_type,
+        )
+    )

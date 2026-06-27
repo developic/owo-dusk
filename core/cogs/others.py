@@ -15,18 +15,19 @@ import json
 import re
 
 from discord.ext import commands
+
+from core.cogs._BASE import BaseCog
 from utils.misc import check_list_index
 from utils.timestamp import (
-    discord_timestamp_to_datetime,
     calc_time_till_event,
     calc_time_till_timestamp,
+    discord_timestamp_to_datetime,
 )
-from core.cogs._BASE import BaseCog
 
 EVENT_REGEX = r"\*\*\|\*\* `\[\d+\/10"
 
 try:
-    with open("utils/emojis.json", "r", encoding="utf-8") as file:
+    with open("utils/data/emojis.json", "r", encoding="utf-8") as file:
         emoji_dict = json.load(file)
 except FileNotFoundError:
     print("The file emojis.json was not found.")

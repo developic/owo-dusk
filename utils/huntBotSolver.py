@@ -17,10 +17,11 @@
 # (at your option) any later version.
 
 
-import numpy as np
-import io
-from PIL import Image
 import base64
+import io
+
+import numpy as np
+from PIL import Image
 
 priority_groups = [
     list("abdegkmpqstvwxyz"),  # First priority
@@ -66,7 +67,7 @@ def decode_base64_to_image(b64_string):
     return Image.open(buffer)
 
 
-async def solveHbCaptcha(captcha_url, session):
+async def solve_hb_captcha(captcha_url, session):
     checks = []
     for item_list in priority_groups:
         for item in item_list:

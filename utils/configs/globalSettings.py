@@ -75,9 +75,9 @@ class Account:
 
         # Ensures all cooldowns are valid:
         # May want to consider namings in global_settings.json file.
-        validators.validateCooldown(self.startupDelay)
-        validators.validateCooldown(self.commandsStart)
-        validators.validateCooldown(self.commandsHandlerStart)
+        validators.validate_cooldown(self.startupDelay)
+        validators.validate_cooldown(self.commandsStart)
+        validators.validate_cooldown(self.commandsHandlerStart)
 
 
 class TextCommands:
@@ -232,7 +232,7 @@ class BatteryCheck:
         self.minPercentage = d.get("minPercentage")
         self.refreshInterval = d.get("refreshInterval")
 
-        validators.validateFrequency(self.minPercentage)
+        validators.validate_frequency(self.minPercentage)
 
 
 class ChannelSwitcher:
@@ -246,8 +246,8 @@ class ChannelSwitcher:
         self.interval = d.get("interval", [])
         self.delayBeforeSwitch = d.get("delayBeforeSwitch", [])
 
-        validators.validateCooldown(self.interval)
-        validators.validateCooldown(self.delayBeforeSwitch)
+        validators.validate_cooldown(self.interval)
+        validators.validate_cooldown(self.delayBeforeSwitch)
 
 
 class User:
@@ -258,4 +258,6 @@ class User:
             try:
                 self.channels.append(int(ch))
             except (ValueError, TypeError):
-                print(f"[Configuration error] Skipping invalid channel ID: {ch!r} (expected an integer)")
+                print(
+                    f"[Configuration error] Skipping invalid channel ID: {ch!r} (expected an integer)"
+                )

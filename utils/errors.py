@@ -10,8 +10,9 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-from functools import wraps
 from contextlib import contextmanager
+from functools import wraps
+
 
 def suppress_and_log(resource_name="Not mentioned"):
     """

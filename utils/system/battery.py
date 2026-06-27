@@ -10,17 +10,15 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-import os
 import json
-import time
+import os
 import threading
+import time
 
-from utils.system import is_termux
 from utils.errors import suppress_and_log, suppress_and_log_block
-from utils.loader import misc_dict, global_settings_dict, console_width, console
+from utils.loader import console, console_width, global_settings_dict, misc_dict
+from utils.system.system import on_mobile
 
-
-on_mobile = is_termux()
 psutil = None
 
 if not on_mobile and not misc_dict["hostMode"]:
@@ -28,9 +26,10 @@ if not on_mobile and not misc_dict["hostMode"]:
         if global_settings_dict.batteryCheck.enabled:
             import psutil
 
+
 # For battery check
 @suppress_and_log("Battery Checker")
-def checkBattery():
+def check_battery():
     cnf = global_settings_dict.batteryCheck
     if on_mobile:
         while True:
@@ -40,9 +39,7 @@ def checkBattery():
             battery_data = json.loads(battery_status)
             percentage = battery_data["percentage"]
             console.print(
-                f"Current battery •> {percentage}".center(
-                    console_width - 2
-                ),
+                f"Current battery •> {percentage}".center(console_width - 2),
                 style="blue ",
             )
             if percentage < int(cnf.minPercentage):
@@ -54,15 +51,14 @@ def checkBattery():
             if battery is not None:
                 percentage = int(battery.percent)
                 console.print(
-                    f"Current battery •> {percentage}".center(
-                        console_width - 2
-                    ),
+                    f"Current battery •> {percentage}".center(console_width - 2),
                     style="blue ",
                 )
                 if percentage < int(cnf.minPercentage):
                     break
 
+
 def start_battery_check():
     if global_settings_dict.batteryCheck.enabled:
-        loop_thread = threading.Thread(target=checkBattery, daemon=True)
+        loop_thread = threading.Thread(target=check_battery, daemon=True)
         loop_thread.start()

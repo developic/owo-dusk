@@ -10,22 +10,10 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-"""
-THIS FILE PURELY EXISTS FOR TYPEHINTS,
-ignore!
-"""
+from . import battery, notification, popup, system
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
-from discord.ext import commands
-
-if TYPE_CHECKING:
-    # Always false at runtime!
-    from uwu import MyClient
+# we were about to check how suitable imports gonna look with this setup.
 
 
-class BaseCog(commands.Cog):
-    def __init__(self, bot: MyClient):
-        self.bot = bot
+# This shuts Ruff warnings.
+__all__ = ["battery", "notification", "popup", "system"]

@@ -32,34 +32,27 @@ from discord.ext import commands, tasks
 import core.components as components
 import core.database as database
 import utils.configs as config_models
-import utils.state as state
-from utils.misspell import misspell_word
-from website import website_append
-from utils.system import (
-    compare_versions,
-    resource_path,
-    printBox,
-    console
-)
+import utils.system as syst
+from utils.constants import owo_dusk_api, version
 from utils.loader import (
-    global_settings_dict,
-    danger_settings_dict,
     captcha_settings_dict,
-    webhook_data_dict,
     console_width,
-    load_accounts_dict
+    danger_settings_dict,
+    global_settings_dict,
+    load_accounts_dict,
+    webhook_data_dict,
 )
-from utils.constants import (
-    owo_dusk_api,
-    version
-)
+from utils.misspell import misspell_word
 from utils.quest_helper.quest import LocalQuestHandler
+from utils.system.popup import add_popup_queue
+from website import website_append
 
-listUserIds = []
+list_user_ids = []
 webhook_handler = None
 hcaptcha_solver = None
 global_quest_handler = None
 lock = threading.Lock()
+
 
 class MessageDispatcher:
     """
@@ -122,6 +115,7 @@ class MyClient(commands.Bot):
         self.db = database.Database(self)
         self.quest_handler = None
         self.danger_settings_dict = danger_settings_dict
+        self.add_popup_queue = add_popup_queue
 
         self.quest_help_request = {
             "cookie": {"till": 0, "enabled": False, "userid": 0, "channel": 0},
@@ -245,20 +239,22 @@ class MyClient(commands.Bot):
         safety_check = requests.get(f"{owo_dusk_api}/safety_check.json").json()
         latest_version = requests.get(f"{owo_dusk_api}/version.json").json()
 
-        if compare_versions(version, safety_check["version"]):
+        if syst.system.compare_versions(version, safety_check["version"]):
             self.command_handler_status["captcha"] = True
             await self.log(
                 f"There seems to be something wrong...\nStopping code for reason: {safety_check['reason']}\n(This was triggered by {safety_check['author']})",
                 "#5c0018",
             )
-            if compare_versions(latest_version["version"], safety_check["version"]):
+            if syst.system.compare_versions(
+                latest_version["version"], safety_check["version"]
+            ):
                 await self.log(
                     f"please update to: v{latest_version['version']} to continue using owo-dusk!",
                     "#33245e",
                 )
 
     async def start_cogs(self):
-        files = os.listdir(resource_path("./core/cogs"))  # Get the list of files
+        files = os.listdir(syst.system.resource_path("./core/cogs"))  # Get the list of files
         self.random.shuffle(files)
         self.refresh_commands_dict()
         for filename in files:
@@ -492,21 +488,6 @@ class MyClient(commands.Bot):
             for item in items:
                 await self.queue.put(item)
 
-    def add_popup_queue(self, channel_name, captcha_type=None):
-        with lock:
-            state.popup_queue.put(
-                (
-                    (
-                        global_settings_dict.captcha.toastOrPopup.captchaContent
-                        if captcha_type != "Ban"
-                        else global_settings_dict.captcha.toastOrPopup.bannedContent
-                    ),
-                    self.user.name,
-                    channel_name,
-                    captcha_type,
-                )
-            )
-
     async def log(
         self,
         text,
@@ -525,13 +506,13 @@ class MyClient(commands.Bot):
                 lineno = frame_info.lineno
 
             content_to_print = f"[#676585]❲{current_time}❳[/#676585] {self.username} - {text} | [#676585]❲{filename}:{lineno}❳[/#676585]"
-            console.print(content_to_print, style=color, markup=True)
+            syst.system.console.print(content_to_print, style=color, markup=True)
             with lock:
                 if self.misc["debug"]["logInTextFile"]:
                     with open("logs.txt", "a", encoding="utf-8") as log:
                         log.write(f"{content_to_print}\n")
         else:
-            console.print(
+            syst.system.console.print(
                 f"{self.username}| {text}".center(console_width - 2), style=color
             )
         if web_log:
@@ -841,11 +822,11 @@ class MyClient(commands.Bot):
             global_quest_handler, self.user.id, self.session
         )
 
-        printBox(
+        syst.system.print_box(
             f"-Loaded {self.username}[*].".center(console_width - 2),
             "bold royal_blue1 ",
         )
-        listUserIds.append(self.user.id)
+        list_user_ids.append(self.user.id)
 
         await self.db.update_priorities()
 

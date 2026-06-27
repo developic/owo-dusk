@@ -10,11 +10,12 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-import os
 import json
+import os
 import subprocess
-from rich.console import Console
 from time import sleep
+
+from rich.console import Console
 
 console = Console()
 

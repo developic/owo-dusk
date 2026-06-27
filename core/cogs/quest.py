@@ -11,15 +11,16 @@
 # (at your option) any later version.
 
 import asyncio
-import re
 import json
+import re
 
-from discord.ext.commands import ExtensionNotLoaded
 from discord.ext import commands, tasks
+from discord.ext.commands import ExtensionNotLoaded
+
 from core.cogs._BASE import BaseCog
 
 try:
-    with open("utils/emojis.json", "r", encoding="utf-8") as file:
+    with open("utils/data/emojis.json", "r", encoding="utf-8") as file:
         emoji_dict = json.load(file)
 except FileNotFoundError:
     print("The file emojis.json was not found.")
