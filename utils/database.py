@@ -15,7 +15,9 @@ import os
 from utils.loader import misc_dict, console
 from utils.constants import database_version, version
 from utils.system import compare_versions
+from utils.errors import suppress_and_log
 
+@suppress_and_log("Database Initialisation")
 def create_database(db_path="utils/data/db.sqlite"):
     if os.path.exists(db_path):
         conn = sqlite3.connect(db_path)

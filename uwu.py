@@ -22,80 +22,50 @@ from queue import Queue
 
 # Local
 import utils.state as state
+
+from core.bot_runner import fetch_json, run_bots
 from utils.notification import notify
 from utils.webhook import webhookSender
 from utils.runtime_handler import start_runtime_loop
 from utils.captcha_solver.yescaptcha import captchaClient
-from utils.bot_runner import fetch_json, run_bots
 from utils.database import create_database
 from website import web_start
+from utils.errors import suppress_and_log, suppress_and_log_block
+
 from utils.system import (
     compare_versions,
     clear,
     printBox,
     get_local_ip,
     misc_dict,
-    console
+    console,
 )
 from utils.loader import (
     global_settings_dict,
     captcha_settings_dict,
     console_width,
 )
-from utils.constants import (
-    owo_dusk_api,
-    owoPanel,
-    version
-)
+from utils.constants import owo_dusk_api, owoPanel, version
 from utils.battery import start_battery_check, on_mobile
 from utils.quest_helper.quest import QuestHandler
 
-import client
-
-
-"""Ctrl+c detect"""
+import core.client as client
 
 
 def handle_sigint(signal_number, frame):
     print("\nCtrl+C detected. stopping code!")
     os._exit(0)
 
-clear()
+@suppress_and_log("Setup Service")
+def setup_and_start_services():
+    # clear console
+    clear()
 
-"""FLASK APP"""
-
-start_battery_check()
-
-# ----------STARTING BOT----------#
-
-if __name__ == "__main__":
+    # Sets up CTRL+C detection
     signal.signal(signal.SIGINT, handle_sigint)
-    notify(
-        "OwO-Dusk starting... If any issue arises visit out discord support server (link available in console or github)",
-        "Starting OwO-Dusk! :>",
-    )
 
-    if not misc_dict["console"]["compactMode"]:
-        console.print(owoPanel)
-        console.rule(f"[bold blue1]version - {version}", style="navy_blue")
-    version_json = fetch_json(f"{owo_dusk_api}/version.json", "version info")
-
-    if compare_versions(version, version_json["version"]):
-        printBox(
-            f"""Update Detected - {version_json["version"]}
-    Changelog:-
-        {version_json["changelog"]}""",
-            "bold gold3",
-        )
-        if version_json["important_update"]:
-            printBox("It is recommended to update....", "bold light_yellow3")
-
-    tokens_and_channels = [
-        line.strip().split() for line in open("tokens.txt", "r", encoding="utf-8")
-    ]
-    token_len = len(tokens_and_channels)
-
-    printBox(f"-Received {token_len} tokens.".center(console_width - 2), "bold magenta")
+    # Start battery check service
+    start_battery_check()
 
     # Create database or modify if required
     create_database()
@@ -103,6 +73,7 @@ if __name__ == "__main__":
     # Weekly runtime thread
     start_runtime_loop()
 
+    # Start website if enabled
     if global_settings_dict.website.enabled:
         # Start website
         web_thread = threading.Thread(
@@ -123,8 +94,71 @@ if __name__ == "__main__":
             ),
             "dark_magenta",
         )
-    try:
-        if misc_dict["news"]:
+
+@suppress_and_log("Version Check")
+def notify_version_changes():
+    # Detect updates and notify
+    version_json = fetch_json(f"{owo_dusk_api}/version.json", "version info")
+    if compare_versions(version, version_json["version"]):
+        printBox(
+            f"""Update Detected - {version_json["version"]}
+    Changelog:
+        {version_json["changelog"]}""",
+            "bold gold3",
+        )
+        notify(
+            f"Content: {version_json['changelog']}",
+            f"New Update detected: {version_json['version']}",
+        )
+        if version_json["important_update"]:
+            printBox("It is recommended to update....", "bold light_yellow3")
+
+@suppress_and_log("Ask To Star Repo")
+def ask_to_star_repo():
+    console.print(
+        "Won't you take 5~ minutes of your time, from the countless minutes saved by owodusk - to star its GitHub Repo? Thankyou!",
+        style="navajo_white1",
+    )
+
+    if global_settings_dict.webhook.enabled:
+        webhook = SyncWebhook.from_url(global_settings_dict.webhook.webhookUrl)
+
+        color = discord.Color(0xC48DC3)
+        emb = discord.Embed(
+            title="Star the github repo!",
+            description="Starring the GitHub repo motivates us to keep adding new and better features! It takes less than 5 minutes to do that, so do star the GitHub repo at https://github.com/owo-dusk/owo-dusk.",
+            color=color,
+        )
+        emb.set_thumbnail(
+            url="https://cdn.discordapp.com/emojis/723856770249916447.gif"
+        )
+
+        webhook.send(embed=emb, username="OwO-Dusk")
+
+
+def start_owodusk():
+    notify(
+        "OwO-Dusk starting... If any issue arises visit out discord support server (link available in console or github)",
+        "Starting OwO-Dusk! :>",
+    )
+    if not misc_dict["console"]["compactMode"]:
+        console.print(owoPanel)
+        console.rule(f"[bold blue1]version - {version}", style="navy_blue")
+
+    # Version Check
+    notify_version_changes()
+    # Start up tasks and services
+    setup_and_start_services()
+
+    tokens_and_channels = [
+        line.strip().split() for line in open("tokens.txt", "r", encoding="utf-8")
+    ]
+    token_len = len(tokens_and_channels)
+
+    printBox(f"-Received {token_len} tokens.".center(console_width - 2), "bold magenta")
+
+    if misc_dict["news"]:
+        with suppress_and_log_block("Fetch News"):
             news_json = fetch_json(f"{owo_dusk_api}/news.json", "news")
             if news_json.get("available"):
                 printBox(
@@ -134,29 +168,9 @@ if __name__ == "__main__":
                     f"bold {news_json.get('color', 'white')}",
                     title=news_json.get("title", "???"),
                 )
-    except Exception as e:
-        print(f"Error - {e}, while attempting to fetch news")
 
     if not misc_dict["console"]["hideStarRepoMessage"]:
-        console.print(
-            "Star the repo in our github page if you want us to continue maintaining this proj :>.",
-            style="thistle1",
-        )
-
-        if global_settings_dict.webhook.enabled:
-            webhook = SyncWebhook.from_url(global_settings_dict.webhook.webhookUrl)
-
-            color = discord.Color(0xC48DC3)
-            emb = discord.Embed(
-                title="Star the github repo!",
-                description="Starring the GitHub repo motivates us to keep adding new and better features! It takes less than 5 minutes to do that, so do star the GitHub repo at https://github.com/owo-dusk/owo-dusk .",
-                color=color,
-            )
-            emb.set_thumbnail(
-                url="https://cdn.discordapp.com/emojis/723856770249916447.gif"
-            )
-
-            webhook.send(embed=emb, username="OwO-Dusk")
+        ask_to_star_repo()
 
     console.rule(style="navy_blue")
 
@@ -194,7 +208,10 @@ if __name__ == "__main__":
         and not on_mobile
         and not misc_dict["hostMode"]
     ):
+        # In MacOS, for Popup to work correctly, it must be ran through
+        # The main loop. For that reason, `run_bots` are ran through a thread
         from utils.popup import popup_main_loop
+
         state.popup_queue = Queue()
 
         bot_threads = threading.Thread(target=run_bots, args=(tokens_and_channels,))
@@ -204,3 +221,7 @@ if __name__ == "__main__":
         popup_main_loop()
     else:
         run_bots(tokens_and_channels)
+
+
+if __name__ == "__main__":
+    start_owodusk()

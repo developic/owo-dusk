@@ -18,8 +18,10 @@ import socket
 from utils.loader import console, misc_dict, global_settings_dict
 from rich.panel import Panel
 
+from utils.errors import suppress_and_log
 from utils.colors import COLORS
 
+@suppress_and_log("Comparing Version")
 def compare_versions(current_version, latest_version):
     current_version = current_version.lstrip("v")
     latest_version = latest_version.lstrip("v")
@@ -42,13 +44,13 @@ def compare_versions(current_version, latest_version):
 def clear():
     os.system("cls") if os.name == "nt" else os.system("clear")
 
-
+@suppress_and_log("Getting Resource Path")
 def resource_path(relative_path):
     if hasattr(sys, "_MEIPASS"):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
 
-
+@suppress_and_log("Checking if Termux")
 def is_termux():
     termux_prefix = os.environ.get("PREFIX")
     termux_home = os.environ.get("HOME")
@@ -60,11 +62,12 @@ def is_termux():
     else:
         return os.path.isdir("/data/data/com.termux")
 
-
+@suppress_and_log("Installing package")
 def install_package(*args):
     subprocess.check_call([sys.executable, "-m", "pip", "install", *args])
 
 
+@suppress_and_log("Installing Termux Package")
 def install_termux_package(package_name: str, display_name: str | None = None):
     name = display_name or package_name
 
@@ -80,6 +83,7 @@ def install_termux_package(package_name: str, display_name: str | None = None):
             f"{COLORS.BOLD_RED}[x]Error when trying to install {name}:\n{e}{COLORS.RESET}"
         )
         return False
+
 
 def printBox(text, color, title=None):   
     test_panel = Panel(text, style=color, title=title)

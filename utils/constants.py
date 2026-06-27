@@ -12,6 +12,7 @@
 
 from rich.panel import Panel
 from rich.align import Align
+
 owo_dusk_api = "https://echoquill.github.io/owo-dusk-api"
 
 owoArt = r"""
