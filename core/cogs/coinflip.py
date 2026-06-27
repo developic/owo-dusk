@@ -76,7 +76,7 @@ class Coinflip(BaseCog):
                 await self.bot.sleep_till(self.cooldowns.briefCooldown)
             else:
                 await self.bot.remove_queue(id="coinflip")
-                await self.bot.sleep_till(self.settings.get_cd())
+                await self.bot.sleep(self.settings.get_cd())
 
             amount_to_gamble = int(
                 self.settings.startValue * (self.settings.multiplier**self.turns_lost)
