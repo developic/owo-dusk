@@ -50,6 +50,10 @@ def setup_and_start_services():
     # clear console
     syst.system.clear()
 
+    if not misc_dict["console"]["compactMode"]:
+        syst.system.console.print(owo_panel)
+        syst.system.console.rule(f"[bold blue1]version - {version}", style="navy_blue")
+
     # Sets up CTRL+C detection
     signal.signal(signal.SIGINT, handle_sigint)
 
@@ -132,9 +136,6 @@ def start_owodusk():
         "OwO-Dusk starting... If any issue arises visit out discord support server (link available in console or github)",
         "Starting OwO-Dusk! :>",
     )
-    if not misc_dict["console"]["compactMode"]:
-        syst.system.console.print(owo_panel)
-        syst.system.console.rule(f"[bold blue1]version - {version}", style="navy_blue")
 
     # Version Check
     notify_version_changes()
