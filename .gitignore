@@ -118,9 +118,4 @@ Desktop.ini
 # Local configuration
 *.local
 
-# Generated user files
-/tokens.txt
 
-/config/
-/utils/data/
-/utils/stats.json

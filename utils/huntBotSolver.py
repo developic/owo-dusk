@@ -1,4 +1,5 @@
 # This file includes code originally authored by realphandat.
+# Note: the below source has been deleted previously
 # Source: "phandat-selfbot" (https://github.com/realphandat/phandat-selfbot)
 # This file is licensed under the GNU General Public License v3.0 (GPL-3.0).
 #
