@@ -44,7 +44,6 @@ from utils.loader import (
 )
 from utils.misspell import misspell_word
 from utils.quest_helper.quest import LocalQuestHandler
-from utils.system.popup import add_popup_queue
 from website import website_append
 
 list_user_ids = []
@@ -115,7 +114,11 @@ class MyClient(commands.Bot):
         self.db = database.Database(self)
         self.quest_handler = None
         self.danger_settings_dict = danger_settings_dict
-        self.add_popup_queue = add_popup_queue
+        if not syst.system.on_mobile:
+            self.add_popup_queue = syst.popup.add_popup_queue
+        else:
+            # Shouldn't be used on Termux Devices...
+            self.add_popup_queue = None
 
         self.quest_help_request = {
             "cookie": {"till": 0, "enabled": False, "userid": 0, "channel": 0},

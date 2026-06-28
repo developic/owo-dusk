@@ -18,6 +18,10 @@ from utils.loader import global_settings_dict
 
 popup_queue = Queue()
 
+# Task: Maybe better to handle termux popup directly from here
+# instead of handling it externally making there be a need 
+# to control imports
+
 @suppress_and_log("Popup Queue")
 def popup_main_loop():
     root = tk.Tk()

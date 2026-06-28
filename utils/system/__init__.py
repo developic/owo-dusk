@@ -10,7 +10,12 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-from . import battery, notification, popup, system
+from utils.system.system import on_mobile
+
+from . import battery, notification, system
+
+if not on_mobile:
+    from . import popup
 
 # we were about to check how suitable imports gonna look with this setup.
 
