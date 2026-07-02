@@ -219,7 +219,7 @@ class Hunt(BaseCog):
                             animal_image_url = result_list[0]["emoji_url"]
                             await self.bot.send_webhook(
                                 "on_hunt_catch",
-                                hunt_caught_emojis=hunt_caught_emojis,
+                                #hunt_caught_emojis=hunt_caught_emojis,
                                 best_catch=best_catch,
                                 best_rank=best_rank,
                                 animal_image_url=animal_image_url,
