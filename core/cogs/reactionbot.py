@@ -53,9 +53,9 @@ class Reactionbot(BaseCog):
             ],
             "owo": self.bot.alias["owo"]["normal"],
         }
+        arg = ""
 
         if id in ("pray", "curse"):
-            arg = ""
             settings = self.fetch_settings(id)
             if settings.user_id:
                 user_id = self.bot.random.choice(settings.user_id)
