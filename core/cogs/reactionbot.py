@@ -37,14 +37,6 @@ class Reactionbot(BaseCog):
     def reaction_bot_settings(self):
         return self.bot.settings_dict.cooldowns.reactionBot
 
-    def pray_curse_channels(self):
-        channels = []
-        for cmd in ["pray", "curse"]:
-            cnf = self.fetch_settings(cmd)
-            if cnf:
-                channels.append(cnf.custom_channel if cnf.enabled else self.bot.cm.id)
-        return channels
-
     def fetch_settings(self, cmd):
         return getattr(self.bot.settings_dict.commands, cmd)
 
@@ -201,7 +193,7 @@ class Reactionbot(BaseCog):
                         cmd = "hunt" if hunt else "battle"
                         await self.send_cmd(cmd)
 
-            if message.channel.id in self.pray_curse_channels():
+            if message.channel.id in self.bot.active_channel_ids:
                 # check, incomplete!
                 if "**pray/curse**" in message.content and (pray or curse):
                     cmds = []
