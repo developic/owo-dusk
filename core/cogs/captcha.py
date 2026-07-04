@@ -331,12 +331,7 @@ class Captcha(BaseCog):
                     )
                 return
 
-        channels = [self.bot.dm.id, self.bot.cm.id, self.bot.boss_channel_id]
-
-        for cmd in ("pray", "curse"):
-            cnf = self.fetch_settings(cmd).custom_channel
-            if cnf.enabled:
-                channels.append(cnf.channel)
+        channels = self.bot.active_channel_ids
 
         if message.channel.id in channels and message.author.id == self.bot.owo_bot_id:
             components = message.components

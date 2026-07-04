@@ -203,6 +203,29 @@ class MyClient(commands.Bot):
             self.command_handler_status["state"] = False
             self.state_event.clear()
 
+    @property
+    def active_channel_ids(self):
+        """
+        Single source of truth for the channeliss currently relevant to this
+        client (DM, current main channel, active boss channel, and any
+        enabled pray/curse custom channels). 
+        Recomputed fresh on every access, so it always reflects live state - no caching, no manual syncing required at call sites.
+        """
+        ids = set()
+        if self.cm:
+            ids.add(self.cm.id)
+        if self.dm:
+            ids.add(self.dm.id)
+        if self.boss_channel_id:
+            ids.add(self.boss_channel_id)
+        if self.settings_dict:
+            for cmd_name in ("pray", "curse"):
+                cnf = getattr(self.settings_dict.commands, cmd_name, None)
+                custom = getattr(cnf, "custom_channel", None) if cnf else None
+                if custom and custom.enabled:
+                    ids.add(custom.channel)
+        return ids
+
     async def empty_checks_and_switch(self, channel):
         self.command_handler_status["hold_handler"] = True
         await self.sleep_till(
@@ -569,15 +592,15 @@ class MyClient(commands.Bot):
             "thumbnail",
             "author_image",
         ]
+        format_kwargs = {
+            "username": self.user.name,
+            "userid": self.user.id,
+            "current_time": datetime.now().strftime("%H:%M:%S"),
+            **kwargs,
+        }
         for field in formattable_fields:
             if data.get(field):
-                data[field] = data[field].format(
-                    # I could directly pass **kwargs here? Perhaps after proper documentation!
-                    username=self.user.name,
-                    userid=self.user.id,
-                    current_time=datetime.now().strftime("%H:%M:%S"),
-                    **kwargs,
-                )
+                data[field] = data[field].format(**format_kwargs)
 
         color = data.get("color", None)
         if color:
