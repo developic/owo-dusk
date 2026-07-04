@@ -205,12 +205,6 @@ class MyClient(commands.Bot):
 
     @property
     def active_channel_ids(self):
-        """
-        Single source of truth for the channeliss currently relevant to this
-        client (DM, current main channel, active boss channel, and any
-        enabled pray/curse custom channels). 
-        Recomputed fresh on every access, so it always reflects live state - no caching, no manual syncing required at call sites.
-        """
         ids = set()
         if self.cm:
             ids.add(self.cm.id)
