@@ -845,12 +845,12 @@ class MyClient(commands.Bot):
         else:
             self.username = self.user.name
 
-        self.safety_check_loop.start()
         self.local_headers = await components.headers.generate_headers()
         self.local_headers["Authorization"] = self.token
         if self.session is None:
             self.session = aiohttp.ClientSession()
-
+        self.safety_check_loop.start()
+        
         self.quest_handler = LocalQuestHandler(
             global_quest_handler, self.user.id, self.session
         )
