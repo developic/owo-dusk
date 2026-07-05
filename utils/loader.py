@@ -16,7 +16,7 @@ import tomllib
 
 from rich.console import Console
 
-import utils.configs as config_models
+import utils.config_models as config_models
 
 
 def load_accounts_dict(file_path="utils/stats.json"):

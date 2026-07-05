@@ -16,7 +16,7 @@
 
 import random
 
-from utils.configs import validators
+from utils.config_models import validators
 
 
 def get_cd(cd: list):

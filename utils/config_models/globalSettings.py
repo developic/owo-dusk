@@ -23,7 +23,7 @@ Also confirm all settings are updating.
 also ensure types aren't none, and values actually exist
 """
 
-from utils.configs import validators
+from utils.config_models import validators
 
 
 class GlobalSettings:
