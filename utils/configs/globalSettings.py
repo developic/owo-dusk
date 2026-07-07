@@ -24,54 +24,55 @@ also ensure types aren't none, and values actually exist
 """
 
 from utils.configs import validators
+from utils.configs.helpers import expected_fetch
 
 
 class GlobalSettings:
     def __init__(self, d: dict):
-        self.typingIndicator = d.get("typingIndicator", False)
-        self.silentMessage = d.get("silentMessages", False)  # Changed
-        self.offlineStatus = d.get("offlineStatus", False)
-        self.ocrApi = d.get("ocrApi", "helloworld")
+        self.typingIndicator = expected_fetch(d, "typingIndicator", bool)
+        self.silentMessage = expected_fetch(d, "silentMessages", bool)  
+        self.offlineStatus = expected_fetch(d, "offlineStatus", bool)
+        self.ocrApi = expected_fetch(d, "ocrApi", str)
 
         # Website Dashboard
-        self.website = Website(d.get("website", {}))
+        self.website = Website(expected_fetch(d, "website", dict))
 
         # Account Delays
-        self.account = Account(d.get("account", {}))
+        self.account = Account(expected_fetch(d, "account", dict))
 
         # Text Commands
-        self.textCommands = TextCommands(d.get("textCommands", {}))
+        self.textCommands = TextCommands(expected_fetch(d, "textCommands", dict))
 
         # Webhook Logging
-        self.webhook = Webhook(d.get("webhook", {}))
+        self.webhook = Webhook(expected_fetch(d, "webhook", dict))
 
         # Console commands
-        self.console = Console(d.get("console", {}))
+        self.console = Console(expected_fetch(d, "console", dict))
 
         # Captcha
-        self.captcha = Captcha(d.get("captcha", {}))
+        self.captcha = Captcha(expected_fetch(d, "captcha", dict))
 
         # Battery Check
-        self.batteryCheck = BatteryCheck(d.get("batteryCheck", {}))
+        self.batteryCheck = BatteryCheck(expected_fetch(d, "batteryCheck", dict))
 
         # Channel Switcher
-        self.channelSwitcher = ChannelSwitcher(d.get("channelSwitcher", {}))
+        self.channelSwitcher = ChannelSwitcher(expected_fetch(d, "channelSwitcher", dict))
 
 
 class Website:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.port = d.get("port", 1200)
-        self.refreshInterval = d.get("refreshInterval", 15)
-        self.password = d.get("password", "areallylongandsecretpassword")
-        self.enableHost = d.get("enableHost", False)
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.port = expected_fetch(d, "port", int)
+        self.refreshInterval = expected_fetch(d, "refreshInterval", int)
+        self.password = expected_fetch(d, "password", str)
+        self.enableHost = expected_fetch(d, "enableHost", bool)
 
 
 class Account:
     def __init__(self, d: dict):
-        self.startupDelay = d.get("startupDelay", [])
-        self.commandsStart = d.get("commandsStartDelay", [])  # Changed
-        self.commandsHandlerStart = d.get("commandsHandlerStartDelay", [])  # Changed
+        self.startupDelay = expected_fetch(d, "startupDelay", list, float)
+        self.commandsStart = expected_fetch(d, "commandsStartDelay", list, float)  
+        self.commandsHandlerStart = expected_fetch(d, "commandsHandlerStartDelay", list, float)
 
         # Ensures all cooldowns are valid:
         # May want to consider namings in global_settings.json file.
@@ -82,36 +83,36 @@ class Account:
 
 class TextCommands:
     def __init__(self, d: dict):
-        self.prefix = d.get("prefix", ".")
-        self.stopCommand = d.get("commandToStopUser", "stop")  # Changed
-        self.startCommand = d.get("commandToStartUser", "start")  # Changed
-        self.restartCommand = d.get(
-            "commandToRestartAfterCaptcha", "restart_captcha"
-        )  # Changed
-        self.switchChannelCommand = d.get("CommandToSwitchChannel", "switch_channel")
-        self.sleepCommand = d.get("commandToSleep", "sleep")
-        self.defaultSleepDuration = d.get("defaultSleepDuration", 600)
-        self.allowedUsers = d.get("allowedUsers", [])
+        self.prefix = expected_fetch(d, "prefix", str)
+        self.stopCommand = expected_fetch(d, "commandToStopUser", str)  
+        self.startCommand = expected_fetch(d, "commandToStartUser", str)  
+        self.restartCommand = expected_fetch(
+            d, "commandToRestartAfterCaptcha", str
+        )  
+        self.switchChannelCommand = expected_fetch(d, "CommandToSwitchChannel", str)
+        self.sleepCommand = expected_fetch(d, "commandToSleep", str)
+        self.defaultSleepDuration = expected_fetch(d, "defaultSleepDuration", int)
+        self.allowedUsers = expected_fetch(d, "allowedUsers", list, int)
 
 
 class Webhook:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.logCommandSend = d.get("logCommandSend", False)
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.logCommandSend = expected_fetch(d, "enabled", bool)
         self.webhookUrl = d.get("webhookUrl") or ""
         self.webhookCaptchaUrl = d.get("webhookCaptchaUrl") or ""
-        self.pingUserId = d.get("webhookUserIdToPingOnCaptcha") or ""  # changed
+        self.pingUserId = d.get("webhookUserIdToPingOnCaptcha") or ""  
 
-        self.animalLog = AnimalLog(d.get("animalLog", {}))  # Changed + json changed
+        self.animalLog = AnimalLog(expected_fetch(d, "animalLog", dict))
 
-        self.others = WebhookOthers(d.get("others", {}))
+        self.others = WebhookOthers(expected_fetch(d, "others", dict))
 
 
 class AnimalLog:
     # Part of `Webhook` class
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.rank = AnimalLogRank(d.get("rank", {}))
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.rank = AnimalLogRank(expected_fetch(d, "rank", dict))
 
 
 class AnimalLogRank:
@@ -131,120 +132,125 @@ class AnimalLogRank:
         ]
 
         for rank in self._rank:
-            setattr(self, rank, d.get(rank, False))
+            setattr(self, rank, expected_fetch(d, rank, bool))
 
 
 class WebhookOthers:
     # Part of `Webhook` class
     def __init__(self, d: dict):
-        self.lootbox = d.get("logLootbox")  # Changed
-        self.crate = d.get("logCrate")  # Changed
-        self.logChannelSwitch = d.get("logChannelSwitch", False)
+        self.lootbox = expected_fetch(d, "logLootbox", bool)  
+        self.crate = expected_fetch(d, "logCrate", bool)  
+        self.logChannelSwitch = expected_fetch(d, "logChannelSwitch", bool)
 
 
 class Console:
     # Console commands on captcha.
     def __init__(self, d: dict):
-        self.onCaptcha = d.get("runConsoleCommandOnCaptcha", False)  # Changed
-        self.onBan = d.get("runConsoleCommandOnBan", None)  # Changed
+        self.onCaptcha = expected_fetch(d, "runConsoleCommandOnCaptcha", bool)  
+        self.onBan = expected_fetch(d, "runConsoleCommandOnBan", bool)  
 
-        self.captchaCommand = d.get("commandToRunOnCaptcha", "")  # Changed
-        self.banCommand = d.get("commandToRunOnBan", "")  # Changed
-
+        self.captchaCommand = expected_fetch(d, "commandToRunOnCaptcha", str)  
+        self.banCommand = expected_fetch(d, "commandToRunOnBan", str)
 
 class Captcha:
     def __init__(self, d: dict):
-        self.openCaptchaWebsite = d.get("openCaptchaWebsite", False)
-        self.stopIfFailure = d.get("stopCodeIfFailedToSolve", False)  # Changed
+        self.openCaptchaWebsite = expected_fetch(d, "openCaptchaWebsite", bool)
+        self.stopIfFailure = expected_fetch(d, "stopCodeIfFailedToSolve", bool)  
+        
         # Notifications
-        self.notifications = Notifications(d.get("notifications", {}))
+        self.notifications = Notifications(expected_fetch(d, "notifications", dict))
+        
         # Play Audio
-        self.playAudio = PlayAudio(d.get("playAudio", {}))
+        self.playAudio = PlayAudio(expected_fetch(d, "playAudio", dict))
+        
         # Toast and Popup
-        self.toastOrPopup = ToastOrPopup(d.get("toastOrPopup", {}))
+        self.toastOrPopup = ToastOrPopup(expected_fetch(d, "toastOrPopup", dict))
+        
         # Termux specific
-        self.termux = Termux(d.get("termux", {}))
+        self.termux = Termux(expected_fetch(d, "termux", dict))
 
 
 class Notifications:
     # Part of `Captcha` class
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.captchaContent = d.get("captchaContent", "captcha content missing")
-        self.bannedContent = d.get("bannedContent", "banned content missing")
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.captchaContent = expected_fetch(d, "captchaContent", str)
+        self.bannedContent = expected_fetch(d, "bannedContent", str)
 
-        self.reccur = Reccur(d.get("reccur", {}))
+        self.reccur = Reccur(expected_fetch(d, "reccur", dict))
 
 
 class Reccur:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.timesToReccur = d.get("timesToReccur", 3)  # Changed - JSON
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.timesToReccur = expected_fetch(d, "timesToReccur", int)
 
 
 class PlayAudio:
     # Part of `Captcha` class
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.path = d.get("path", "")
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.path = expected_fetch(d, "path", str)
 
 
 class ToastOrPopup:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.captchaContent = d.get("captchaContent", "captcha content missing")
-        self.bannedContent = d.get("bannedContent", "banned content missing")
-        # Termux customization
-        self.termuxToast = TermuxToast(d.get("termuxToast", {}))
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.captchaContent = expected_fetch(d, "captchaContent", str)
+        self.bannedContent = expected_fetch(d, "bannedContent", str)
+        self.termuxToast = TermuxToast(expected_fetch(d, "termuxToast", dict))
 
 
 class TermuxToast:
     def __init__(self, d: dict):
-        self.backgroundColour = d.get("backgroundColour", "black")
-        self.textColour = d.get("textColour", "red")
-        self.position = d.get("position", "middle")
+        self.backgroundColour = expected_fetch(d, "backgroundColour", str)
+        self.textColour = expected_fetch(d, "textColour", str)
+        self.position = expected_fetch(d, "position", str)
 
 
 class Termux:
     # Part of `Captcha` class
     # Termux only part
     def __init__(self, d: dict):
-        self.vibrate = Vibrate(d.get("vibrate", {}))
-        self.textToSpeech = TextToSpeech(d.get("textToSpeech", {}))
+        self.vibrate = Vibrate(expected_fetch(d, "vibrate", dict))
+        self.textToSpeech = TextToSpeech(expected_fetch(d, "textToSpeech", dict))
 
 
 class Vibrate:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.time = d.get("time", 5)
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.time = expected_fetch(d, "time", int)
 
 
 class TextToSpeech:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.captchaContent = d.get("captchaContent", "captcha content missing")
-        self.bannedContent = d.get("bannedContent", "banned content missing")
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.captchaContent = expected_fetch(d, "captchaContent", str)
+        self.bannedContent = expected_fetch(d, "bannedContent", str)
 
 
 class BatteryCheck:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.minPercentage = d.get("minPercentage")
-        self.refreshInterval = d.get("refreshInterval")
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.minPercentage = expected_fetch(d, "minPercentage", int)
+        self.refreshInterval = expected_fetch(d, "refreshInterval", int)
 
         validators.validate_frequency(self.minPercentage)
 
 
 class ChannelSwitcher:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
+        self.enabled = expected_fetch(d, "enabled", bool)
 
-        self.allUsers = d.get("allUsers", {}).get("channels", [])  # Changed
+        self.allUsers = expected_fetch(
+            expected_fetch(d, "allUsers", dict), "channels", list, int
+        )  
         self.users = []
-        for user_dict in d.get("users", []):
+        for user_dict in expected_fetch(d, "users", list, dict):
             self.users.append(User(user_dict))
-        self.interval = d.get("interval", [])
-        self.delayBeforeSwitch = d.get("delayBeforeSwitch", [])
+            
+        self.interval = expected_fetch(d, "interval", list, float)
+        self.delayBeforeSwitch = expected_fetch(d, "delayBeforeSwitch", list, float)
 
         validators.validate_cooldown(self.interval)
         validators.validate_cooldown(self.delayBeforeSwitch)
@@ -252,12 +258,5 @@ class ChannelSwitcher:
 
 class User:
     def __init__(self, d: dict):
-        self.userid = int(d.get("userid"))
-        self.channels = []
-        for ch in d.get("channels", []):
-            try:
-                self.channels.append(int(ch))
-            except (ValueError, TypeError):
-                print(
-                    f"[Configuration error] Skipping invalid channel ID: {ch!r} (expected an integer)"
-                )
+        self.userid = expected_fetch(d, "userid", int)
+        self.channels = expected_fetch(d, "channels", list, int)

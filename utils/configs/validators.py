@@ -10,7 +10,6 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-
 def validate_cooldown(cd: list):
     """
     Checks if the cooldown provided is a valid cooldown list or not
@@ -38,3 +37,16 @@ def validate_frequency(freq):
     """
     if not 0 <= freq <= 100:
         raise ValueError("Invalid frequency: must be between 0 and 100")
+
+def validate_ids(li: list):
+    """
+    Ensures all Ids stored are numbers
+    """
+    for item in li:
+        try:
+            # Try Convert to Integer
+            int(item)
+        except Exception:
+            return False
+    return True
+
