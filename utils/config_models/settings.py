@@ -17,6 +17,7 @@
 import random
 
 from utils.config_models import validators
+from utils.config_models.helpers import expected_fetch
 
 
 def get_cd(cd: list):
@@ -26,44 +27,44 @@ def get_cd(cd: list):
 
 class Settings:
     def __init__(self, d: dict):
-        self.useSlashCommands = d.get("useSlashCommands", False)
-        self.daily = d.get("autoDaily", False)
-        self.cashCheck = d.get("cashCheck", False)
-        self.prefix = d.get("setprefix", "owo ")
-        self.mail = d.get("claimMail", False)
+        self.useSlashCommands = expected_fetch(d, "useSlashCommands", bool)
+        self.daily = expected_fetch(d, "autoDaily", bool)
+        self.cashCheck = expected_fetch(d, "cashCheck", bool)
+        self.prefix = expected_fetch(d, "setprefix", str)
+        self.mail = expected_fetch(d, "claimMail", bool)
 
         # Commands
-        self.commands = Commands(d.get("commands", {}))
+        self.commands = Commands(expected_fetch(d, "commands", dict))
 
         # Gambling
-        self.gamble = Gambling(d.get("gamble", {}))
+        self.gamble = Gambling(expected_fetch(d, "gamble", dict))
 
         # Boss battles
-        self.boss = BossBattle(d.get("bossBattle", {}))
+        self.boss = BossBattle(expected_fetch(d, "bossBattle", dict))
 
         # Giveaways
-        self.giveaway = Giveaway(d.get("giveawayJoiner", {}))
+        self.giveaway = Giveaway(expected_fetch(d, "giveawayJoiner", dict))
 
         # sleeping
-        self.sleep = Sleep(d.get("sleep", {}))
+        self.sleep = Sleep(expected_fetch(d, "sleep", dict))
 
         # misspell
-        self.misspell = Misspell(d.get("misspell", {}))
+        self.misspell = Misspell(expected_fetch(d, "misspell", dict))
 
         # Cooldowns
-        self.cooldowns = Cooldowns(d.get("defaultCooldowns", {}))
+        self.cooldowns = Cooldowns(expected_fetch(d, "defaultCooldowns", dict))
 
         # Auto Use
-        self.autoUse = AutoUse(d.get("autoUse", {}))
+        self.autoUse = AutoUse(expected_fetch(d, "autoUse", dict))
 
         # Custom command
-        self.customCommands = CustomCommands(d.get("customCommands", {}))
+        self.customCommands = CustomCommands(expected_fetch(d, "customCommands", dict))
 
         # Auto sell/sac - Animal
-        self.animal = Animal(d.get("animal", {}))
+        self.animal = Animal(expected_fetch(d, "animal", dict))
 
         # Auto Quest
-        self.autoQuest = AutoQuest(d.get("autoQuest", {}))
+        self.autoQuest = AutoQuest(expected_fetch(d, "autoQuest", dict))
 
 
 GEMS_RARITY = [
@@ -102,13 +103,15 @@ def find_least_gap(list_to_check):
 
 class AutoQuest:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        helpChannel = d.get("helpChannel", {})
-        self.useHelpChannel = helpChannel.get("postInHelpChannel", False)
-        self.channelId = helpChannel.get("channelId", 0)
-        self.helpOthers = d.get("helpOthers", False)
-        self.canEnable = d.get("enableCommandsToCompleteQuest", False)
-        self.checkCooldown = d.get("checkCooldown", [])
+        self.enabled = expected_fetch(d, "enabled", bool)
+        
+        helpChannel = expected_fetch(d, "helpChannel", dict)
+        self.useHelpChannel = expected_fetch(helpChannel, "postInHelpChannel", bool)
+        self.channelId = expected_fetch(helpChannel, "channelId", int)
+        
+        self.helpOthers = expected_fetch(d, "helpOthers", bool)
+        self.canEnable = expected_fetch(d, "enableCommandsToCompleteQuest", bool)
+        self.checkCooldown = expected_fetch(d, "checkCooldown", list, float)
 
     def get_cd(self):
         return get_cd(self.checkCooldown)
@@ -116,9 +119,9 @@ class AutoQuest:
 
 class CustomCommands:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
+        self.enabled = expected_fetch(d, "enabled", bool)
         self.commands = []
-        for item in d.get("commands", []):
+        for item in expected_fetch(d, "commands", list):
             self.commands.append(CustomCommand(item))
 
     def approximate_minimum_cooldown(self):
@@ -156,46 +159,49 @@ class CustomCommand:
 
 class AutoUse:
     def __init__(self, d: dict):
-        self.lootbox = d.get("autoLootbox", False)
-        self.crate = d.get("autoCrate", False)
-        self.gems = Gems(d.get("gems", {}))
+        self.lootbox = expected_fetch(d, "autoLootbox", bool)
+        self.crate = expected_fetch(d, "autoCrate", bool)
+        self.gems = Gems(expected_fetch(d, "gems", dict))
 
 
 class Gems:
     def __init__(self, d: dict):
         # Task: Re check implementation if required.
-        self.enabled = d.get("enabled", False)
-        self.tiers = d.get("tiers", {})
-        self.gemsToUse = d.get("gemsToUse", {})
-        self.disableHuntIfNoGems = d.get("disableHuntIfNoGems", False)
-        self.dynamicSpecialGem = d.get("dynamicSpecialGemUsage", False)
-        self.useLowest = d.get("order", {}).get("lowestToHighest", False)
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.tiers = expected_fetch(d, "tiers", dict)
+        self.gemsToUse = expected_fetch(d, "gemsToUse", dict)
+        self.disableHuntIfNoGems = expected_fetch(d, "disableHuntIfNoGems", bool)
+        self.dynamicSpecialGem = expected_fetch(d, "dynamicSpecialGemUsage", bool)
+        
+        order = expected_fetch(d, "order", dict)
+        self.useLowest = expected_fetch(order, "lowestToHighest", bool)
 
 
 class Cooldowns:
     def __init__(self, d: dict):
-        self.longCooldown = d.get("longCooldown", None)
-        self.moderateCooldown = d.get("moderateCooldown", None)
-        self.shortCooldown = d.get("shortCooldown", None)
-        self.briefCooldown = d.get("briefCooldown", None)
-        self.captchaRestart = d.get("captchaRestart", None)
-        self.commandHandler = CommandHandler(d.get("commandHandler", {}))
+        # Assuming cooldown timers are integers/numbers
+        self.longCooldown = expected_fetch(d, "longCooldown", list, float)
+        self.moderateCooldown = expected_fetch(d, "moderateCooldown", list, float)
+        self.shortCooldown = expected_fetch(d, "shortCooldown", list, float)
+        self.briefCooldown = expected_fetch(d, "briefCooldown", list, float)
+        self.captchaRestart = expected_fetch(d, "captchaRestart", list, float)
+        self.commandHandler = CommandHandler(expected_fetch(d, "commandHandler", dict))
         # Reaction Bot
-        self.reactionBot = ReactionBot(d.get("reactionBot", {}))
+        self.reactionBot = ReactionBot(expected_fetch(d, "reactionBot", dict))
 
 
 class CommandHandler:
     def __init__(self, d: dict):
-        self.betweenCommands = d.get("betweenCommands", None)
-        self.readdingToQueue = d.get("beforeReaddingToQueue", 0)
+        self.betweenCommands = expected_fetch(d, "betweenCommands", list, float)
+        self.readdingToQueue = expected_fetch(d, "beforeReaddingToQueue", float)
 
 
 class ReactionBot:
     def __init__(self, d: dict):
-        self.huntAndBattle = d.get("huntAndBattle", False)
-        self.owo = d.get("owo", False)
-        self.prayAndCurse = d.get("prayAndCurse", False)
-        self.cooldown = d.get("cooldown", None)
+        self.huntAndBattle = expected_fetch(d, "huntAndBattle", bool)
+        self.owo = expected_fetch(d, "owo", bool)
+        self.prayAndCurse = expected_fetch(d, "prayAndCurse", bool)
+        self.cooldown = expected_fetch(d, "cooldown", list, float)
 
     def get_cd(self):
         return get_cd(self.cooldown)
@@ -203,10 +209,10 @@ class ReactionBot:
 
 class Misspell:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.frequency = d.get("frequencyPercentage", 0)
-        self.baseDelay = d.get("baseDelay", None)
-        self.rectificationTime = d.get("errorRectificationTimePerLetter", None)
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.frequency = expected_fetch(d, "frequencyPercentage", int)
+        self.baseDelay = expected_fetch(d, "baseDelay", list, float)
+        self.rectificationTime = expected_fetch(d, "errorRectificationTimePerLetter", list, float)
 
         validators.validate_frequency(self.frequency)
 
@@ -217,10 +223,10 @@ class Misspell:
 
 class Sleep:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.frequency = d.get("frequencyPercentage", 0)
-        self.checkTime = d.get("checkTime", None)
-        self.sleeptime = d.get("sleepTime", None)
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.frequency = expected_fetch(d, "frequencyPercentage", int)
+        self.checkTime = expected_fetch(d, "checkTime", list, float)
+        self.sleeptime = expected_fetch(d, "sleepTime", list, float)
 
         validators.validate_frequency(self.frequency)
 
@@ -243,10 +249,10 @@ class Sleep:
 
 class Giveaway:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.messageRangeToCheck = d.get("messageRangeToCheck", 0)
-        self.cooldown = d.get("cooldown", None)
-        self.channels = d.get("channelsToJoin", [])
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.messageRangeToCheck = expected_fetch(d, "messageRangeToCheck", int)
+        self.cooldown = expected_fetch(d, "cooldown", list, float)
+        self.channels = expected_fetch(d, "channelsToJoin", list, int)
 
     def get_cd(self):
         return get_cd(self.cooldown)
@@ -254,9 +260,9 @@ class Giveaway:
 
 class BossBattle:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.joinChance = d.get("joinChancePercent", 0)
-        self.joinAll = d.get("joinAllGuilds", False)
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.joinChance = expected_fetch(d, "joinChancePercent", int)
+        self.joinAll = expected_fetch(d, "joinAllGuilds", bool)
 
         if not 0 <= self.joinChance <= 100:
             raise ValueError("Invalid join percent: must be between 0 and 100")
@@ -272,27 +278,26 @@ class BossBattle:
 
 class Gambling:
     def __init__(self, d: dict):
-        self.allottedAmount = d.get("allottedAmount", 0)
-        self.goals = GamblingGoals(d.get("goalSystem", {}))
+        self.allottedAmount = expected_fetch(d, "allottedAmount", int)
+        self.goals = GamblingGoals(expected_fetch(d, "goalSystem", dict))
 
         for cmd in ["coinflip", "slots", "blackjack"]:
-            setattr(self, cmd, GambleItem(d.get(cmd, {})))
+            setattr(self, cmd, GambleItem(expected_fetch(d, cmd, dict)))
 
 
 class GamblingGoals:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.amount = d.get("amount", 0)
-
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.amount = expected_fetch(d, "amount", int)
 
 class GambleItem:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.startValue = d.get("startValue", 0)
-        self.multiplier = d.get("multiplierOnLose", 1)
-        self.cooldown = d.get("cooldown", None)
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.startValue = expected_fetch(d, "startValue", int)
+        self.multiplier = expected_fetch(d, "multiplierOnLose", int) 
+        self.cooldown = expected_fetch(d, "cooldown", list, float)
 
-        cf_options = d.get("options")
+        cf_options = d.get("options", None)
         if cf_options:
             self.options = CoinflipOptions(cf_options)
 
@@ -302,8 +307,8 @@ class GambleItem:
 
 class CoinflipOptions:
     def __init__(self, d: dict):
-        self.heads = d.get("heads", False)
-        self.tails = d.get("tails", False)
+        self.heads = expected_fetch(d, "heads", bool)
+        self.tails = expected_fetch(d, "tails", bool)
 
     def random_choice(self):
         choices = []
@@ -332,17 +337,17 @@ class Commands:
             "piku",
         ]
         for cmd in cmd_list:
-            setattr(self, cmd, Command(d.get(cmd, {})))
+            setattr(self, cmd, Command(expected_fetch(d, cmd, dict)))
 
-        self.shop = ShopCommand(d.get("shop", {}))
-        self.huntbot = HuntbotCommand(d.get("autoHuntBot", {}))
-        self.lottery = Lottery(d.get("lottery", {}))
+        self.shop = ShopCommand(expected_fetch(d, "shop", dict))
+        self.huntbot = HuntbotCommand(expected_fetch(d, "autoHuntBot", dict))
+        self.lottery = Lottery(expected_fetch(d, "lottery", dict))
 
 
 class Command:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.cooldown = d.get("cooldown", None)
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.cooldown = d.get("cooldown", [])
 
         # Hunt and Battle
         self.shortform = d.get("useShortForm", None)
@@ -372,15 +377,15 @@ class Command:
 
 class Lottery:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.amount = d.get("amount", 0)
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.amount = expected_fetch(d, "amount", int)
 
 
 class Animal:
     def __init__(self, d: dict):
-        self.sell = AnimalSellSac(d.get("sell", {}))
-        self.sac = AnimalSellSac(d.get("sac", {}))
-        self.cooldown = d.get("cooldown", None)
+        self.sell = AnimalSellSac(expected_fetch(d, "sell", dict))
+        self.sac = AnimalSellSac(expected_fetch(d, "sac", dict))
+        self.cooldown = expected_fetch(d, "cooldown", list, float)
 
     def get_cd(self):
         return get_cd(self.cooldown)
@@ -388,8 +393,8 @@ class Animal:
 
 class AnimalSellSac:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.rarity = Rarity(d.get("rarity", {}))
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.rarity = Rarity(expected_fetch(d, "rarity", dict))
 
 
 class Rarity:
@@ -436,9 +441,9 @@ RING_PRICES = [
 
 class ShopCommand:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.cooldown = d.get("cooldown", None)
-        self.items = ShopItems(d.get("itemsToBuy", {}))
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.cooldown = expected_fetch(d, "cooldown", list, float)
+        self.items = ShopItems(expected_fetch(d, "itemsToBuy", dict))
 
     def get_cd(self):
         return get_cd(self.cooldown)
@@ -467,7 +472,7 @@ class ShopItems:
     def __init__(self, d: dict):
         for ring, _ in RING_PRICES:
             # self.common etc. named commonRing in settings.
-            setattr(self, ring, d.get(f"{ring}Ring", False))
+            setattr(self, ring, expected_fetch(d, f"{ring}Ring", bool))
 
 
 class CustomChannel:
@@ -476,15 +481,15 @@ class CustomChannel:
     """
 
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.channel = d.get("channelId", 0)
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.channel = expected_fetch(d, "channelId", int)
 
 
 class HuntbotCommand:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.cashToSpend = d.get("cashToSpend", 0)
-        self.upgrader = HuntbotUpgrader(d.get("upgrader", {}))
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.cashToSpend = expected_fetch(d, "cashToSpend", int)
+        self.upgrader = HuntbotUpgrader(expected_fetch(d, "upgrader", dict))
 
 
 HUNTBOT_TRAITS = [
@@ -499,10 +504,10 @@ HUNTBOT_TRAITS = [
 
 class HuntbotUpgrader:
     def __init__(self, d: dict):
-        self.enabled = d.get("enabled", False)
-        self.sleeptime = d.get("sleeptime", None)
-        self.traits = HuntbotTraits(d.get("traits", {}))
-        self.weights = HuntbotWeights(d.get("weights", {}))
+        self.enabled = expected_fetch(d, "enabled", bool)
+        self.sleeptime = expected_fetch(d, "sleeptime", list, float)
+        self.traits = HuntbotTraits(expected_fetch(d, "traits", dict))
+        self.weights = HuntbotWeights(expected_fetch(d, "weights", dict))
 
     def get_cd(self):
         return get_cd(self.sleeptime)
@@ -518,10 +523,10 @@ class HuntbotUpgrader:
 class HuntbotTraits:
     def __init__(self, d: dict):
         for trait in HUNTBOT_TRAITS:
-            setattr(self, trait, d.get(trait, False))
+            setattr(self, trait, expected_fetch(d, trait, bool))
 
 
 class HuntbotWeights:
     def __init__(self, d: dict):
         for trait in HUNTBOT_TRAITS:
-            setattr(self, trait, d.get(trait, 0))
+            setattr(self, trait, expected_fetch(d, trait, int))

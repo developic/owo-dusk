@@ -214,7 +214,7 @@ class Looper(BaseCog):
             channel = quest_cnf["channel"]
         cmd = {
             "cmd_name": cmd_name,
-            "cmd_arguments": pray_cmd_argument(cnf.user_id, cnf.ping_user)
+            "cmd_arguments": str(pray_cmd_argument(cnf.user_id, cnf.ping_user))
             if not quest_help_arg
             else quest_help_arg,
             "prefix": True,
