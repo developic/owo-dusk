@@ -75,7 +75,7 @@ class Battle(BaseCog):
                                     await self.bot.log(
                                         f"{embed.footer.text}", "#292252"
                                     )
-                                if "You lost in " in embed.footer.text:
+                                if "Streak ended at" in embed.footer.text:
                                     if self.settings.notify_streak_loss:
                                         notify(
                                             embed.footer.text, "You lost your streak!"
