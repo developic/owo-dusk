@@ -142,7 +142,7 @@ class Looper(BaseCog):
                 "id": "pray",
             },
             "curse": {
-                "enabled": enabled["curse"],
+                "enabled": enabled["curse"] and not enabled["pray"], # Temporary fix, needs to be removed!
                 "next_run": now
                 + (
                     self.curse_settings.get_cd()
@@ -316,6 +316,12 @@ class Looper(BaseCog):
                     "For level grind, quotes are disabled unless manually enabled through `owo-dusk/config/danger.toml` file due to risks. Please give the file a read and enable it after considering those risks",
                     "#e6e65a",
                 )
+            if self.pray_settings.enabled and self.curse_settings.enabled:
+                await self.bot.log(
+                    "Both pray and curse are enabled. In this case, curse will be disabled. On a later date, I will make it possible to use both pray and curse at the same time, this is a temp fix till then",
+                    "#e6e65a",
+                )
+
             self.initiate_loop.start()
 
     async def cog_unload(self):
