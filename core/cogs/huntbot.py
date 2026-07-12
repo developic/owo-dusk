@@ -17,8 +17,8 @@ from discord.ext import commands
 from discord.ext.commands import ExtensionNotLoaded
 
 from core.cogs._BASE import BaseCog
-from utils.huntbot.hbCalc import allocate_essence
-from utils.huntbot.huntBotSolver import solve_hb_captcha
+from utils.hbCalc import allocate_essence
+from utils.huntBotSolver import solve_hb_captcha
 
 password_reset_regex = r"(?<=Password will reset in )(\d+)"
 huntbot_time_regex = r"(\d+)([DHM])"

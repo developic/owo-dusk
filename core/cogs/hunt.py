@@ -81,6 +81,7 @@ class Hunt(BaseCog):
         emojis = pattern.findall(text)
 
         result_list = []
+        webhook_result_list = []
 
         rank_map = {
             "common": (1, "<:common:416520037713838081>"),
@@ -100,34 +101,35 @@ class Hunt(BaseCog):
             emoji_data = emoji_dict.get(emoji)
 
             if emoji_data:
+                # if self.should_log_emoji(emoji_data["rank"]):
+                if emoji.startswith("<a:"):
+                    emoji_id = emoji[3:-1]
+                    url = f"https://cdn.discordapp.com/emojis/{emoji_id}.gif"
+                else:
+                    emoji_id = emoji[1:-1]
+                    if "2" in emoji_id:
+                        # quick work-around to discord adding 2 at end of emoji names
+                        # I guess this should fix invalid id error for all required emojis
+                        emoji_id = emoji_id[:-1]
+                    url = f"https://emojiapi.dev/api/v1/{emoji_id}/100.png"
+
+                result = {
+                    # "name": emoji_id,
+                    "rank": emoji_data["rank"],
+                    "emoji_url": url,
+                    "emoji": emoji,
+                }
+                result_list.append(result)
                 if self.should_log_emoji(emoji_data["rank"]):
-                    if emoji.startswith("<a:"):
-                        emoji_id = emoji[3:-1]
-                        url = f"https://cdn.discordapp.com/emojis/{emoji_id}.gif"
-                    else:
-                        emoji_id = emoji[1:-1]
-                        if "2" in emoji_id:
-                            # quick work-around to discord adding 2 at end of emoji names
-                            # I guess this should fix invalid id error for all required emojis
-                            emoji_id = emoji_id[:-1]
-                        url = f"https://emojiapi.dev/api/v1/{emoji_id}/100.png"
+                    webhook_result_list.append(result)
+                if (
+                    rank_map[emoji_data["rank"]][0]
+                    > rank_map.get(highest_rank["rarity"], (0, ""))[0]
+                ):
+                    highest_rank["rarity"] = emoji_data["rank"]
+                    highest_rank["emoji"] = rank_map[emoji_data["rank"]][1]
 
-                    result_list.append(
-                        {
-                            # "name": emoji_id,
-                            "rank": emoji_data["rank"],
-                            "emoji_url": url,
-                            "emoji": emoji,
-                        }
-                    )
-                    if (
-                        rank_map[emoji_data["rank"]][0]
-                        > rank_map.get(highest_rank["rarity"], (0, ""))[0]
-                    ):
-                        highest_rank["rarity"] = emoji_data["rank"]
-                        highest_rank["emoji"] = rank_map[emoji_data["rank"]][1]
-
-        return result_list, highest_rank
+        return result_list, webhook_result_list, highest_rank
 
     async def cog_load(self):
         if (
@@ -193,8 +195,8 @@ class Hunt(BaseCog):
                 self.bot.update_cash(5, reduce=True)
 
                 # Get Tiers
-                result_list, highest_rank = self.get_emoji_tier(msg_line)
-                if result_list:
+                result_list, webhook_result_list, highest_rank = self.get_emoji_tier(msg_line)
+                if webhook_result_list:
                     # Handle webhook
                     if (
                         self.webhook_settings.enabled
@@ -219,15 +221,15 @@ class Hunt(BaseCog):
                             animal_image_url = result_list[0]["emoji_url"]
                             await self.bot.send_webhook(
                                 "on_hunt_catch",
-                                #hunt_caught_emojis=hunt_caught_emojis,
+                                # hunt_caught_emojis=hunt_caught_emojis,
                                 best_catch=best_catch,
                                 best_rank=best_rank,
                                 animal_image_url=animal_image_url,
                             )
-                    # Handle updation of rank held (sell/sac)
-                    for result in result_list:
-                        # Should be okay... hopefully
-                        self.bot.animal_rank_in_zoo[result["rank"]] = True
+                # Handle updation of rank held (sell/sac)
+                for result in result_list:
+                    # Should be okay... hopefully
+                    self.bot.animal_rank_in_zoo[result["rank"]] = True
 
                 await self.bot.sleep(self.settings.get_cd())
                 self.cmd["cmd_name"] = (

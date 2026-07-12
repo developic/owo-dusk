@@ -228,7 +228,6 @@ class Looper(BaseCog):
             cmd["channel"] = channel
 
         if getattr(self, f"{cmd_name}_settings").count:
-            print("must count")
             cmd["cmd_arguments"] += f" {next(self.__dict__[f'{cmd_name}_counter'])}"
 
         await self.bot.put_queue(cmd)

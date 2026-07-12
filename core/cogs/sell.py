@@ -17,13 +17,6 @@ from discord.ext import commands, tasks
 
 from core.cogs._BASE import BaseCog
 
-"""
-TASK:
-improve cooldown system (somehow) to make both same.
-perhaps make a new category `animals` as we are already handling command being put separately...?
-"""
-
-
 RARITY_MAP = {
     "c": "common",
     "u": "uncommon",
@@ -108,9 +101,9 @@ class Sell(BaseCog):
         return base
 
     def get_last_ran(self):
-        return "sell" if self.sell_lastran <= self.sac_lastran else "sac"
+        return "sell" if self.sell_lastran >= self.sac_lastran else "sac"
 
-    @tasks.loop()
+    @tasks.loop(seconds=2)
     async def initiate_loop(self):
         choices = ["sell", "sac"]
         self.bot.random.shuffle(choices)
@@ -128,7 +121,8 @@ class Sell(BaseCog):
                     await self.bot.put_queue(cmd_data)
                     self.__dict__[f"{cmd}_lastran"] = time.monotonic()
 
-        await self.bot.sleep_till([10, 15])
+            # To prevent sell and sac being send right after
+            await self.bot.sleep_till([1,2])
 
     async def cog_load(self):
         # start loop, cog will stay awake due to the necessity to calculate value

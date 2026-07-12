@@ -25,12 +25,13 @@ from datetime import datetime, timedelta, timezone
 import aiohttp
 import discord
 import pytz
+import requests
 from discord.ext import commands, tasks
 
 # Local
 import core.components as components
 import core.database as database
-import utils.config_models as config_models
+import utils.configs as config_models
 import utils.system as syst
 from utils.constants import owo_dusk_api, version
 from utils.loader import (
@@ -255,22 +256,8 @@ class MyClient(commands.Bot):
 
     @tasks.loop(seconds=7)
     async def safety_check_loop(self):
-        timeout = aiohttp.ClientTimeout(total=10)
-        try:
-            async with self.session.get(
-                f"{owo_dusk_api}/safety_check.json", timeout=timeout
-            ) as resp:
-                safety_check = await resp.json()
-            async with self.session.get(
-                f"{owo_dusk_api}/version.json", timeout=timeout
-            ) as resp:
-                latest_version = await resp.json()
-        except Exception as e:
-            await self.log(
-                f"Safety check request failed, will retry next cycle: {e}",
-                "#5c0018",
-            )
-            return
+        safety_check = requests.get(f"{owo_dusk_api}/safety_check.json").json()
+        latest_version = requests.get(f"{owo_dusk_api}/version.json").json()
 
         if syst.system.compare_versions(version, safety_check["version"]):
             self.command_handler_status["captcha"] = True
@@ -845,12 +832,12 @@ class MyClient(commands.Bot):
         else:
             self.username = self.user.name
 
+        self.safety_check_loop.start()
         self.local_headers = await components.headers.generate_headers()
         self.local_headers["Authorization"] = self.token
         if self.session is None:
             self.session = aiohttp.ClientSession()
-        self.safety_check_loop.start()
-        
+
         self.quest_handler = LocalQuestHandler(
             global_quest_handler, self.user.id, self.session
         )
