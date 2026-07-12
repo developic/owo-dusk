@@ -23,7 +23,7 @@ from discord.ext import commands
 
 if TYPE_CHECKING:
     # Always false at runtime!
-    from uwu import MyClient
+    from client import MyClient
 
 
 class BaseCog(commands.Cog):
