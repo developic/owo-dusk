@@ -10,8 +10,8 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-from utils.configs.globalSettings import GlobalSettings
-from utils.configs.settings import Settings
+from utils.config_models.globalSettings import GlobalSettings
+from utils.config_models.settings import Settings
 
 
 def FetchSettings(cnf: dict) -> Settings:

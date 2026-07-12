@@ -16,8 +16,8 @@
 
 import random
 
-from utils.configs.helpers import expected_fetch
-from utils.configs import validators
+from utils.config_models import validators
+from utils.config_models.helpers import expected_fetch
 
 
 def get_cd(cd: list):

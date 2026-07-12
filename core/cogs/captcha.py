@@ -122,7 +122,7 @@ class Captcha(BaseCog):
 
     def get_webhook(self):
         webhook_url = self.webhook_settings.webhookCaptchaUrl
-        if not isinstance(webhook_url, str):
+        if not isinstance(webhook_url, str) or not webhook_url:
             # Ensure webhook url is valid
             webhook_url = None
         elif "discord.com" not in webhook_url:

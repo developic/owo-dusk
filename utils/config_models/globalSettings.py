@@ -23,8 +23,8 @@ Also confirm all settings are updating.
 also ensure types aren't none, and values actually exist
 """
 
-from utils.configs import validators
-from utils.configs.helpers import expected_fetch
+from utils.config_models import validators
+from utils.config_models.helpers import expected_fetch
 
 
 class GlobalSettings:
