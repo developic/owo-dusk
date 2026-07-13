@@ -31,7 +31,7 @@ from discord.ext import commands, tasks
 # Local
 import core.components as components
 import core.database as database
-import utils.configs as config_models
+import utils.config_models as config_models
 import utils.system as syst
 from utils.constants import owo_dusk_api, version
 from utils.loader import (
