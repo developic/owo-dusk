@@ -36,15 +36,9 @@ def run_bot(token, channel_id, global_settings_dict, token_len):
 
     logging.getLogger("discord.client").setLevel(logging.ERROR)
 
-    while True:
+    with suppress_and_log_block("Client Run"):
         client = MyClient(token, channel_id, global_settings_dict, token_len)
-
-        try:
-            client.run(token, log_level=logging.ERROR)
-        except Exception as e:
-            syst.system.print_box(f"Unknown error when running bot: {e}", "bold red")
-        if syst.system.on_mobile:
-            break
+        client.run(token, log_level=logging.ERROR)
 
 
 def run_bots(tokens_and_channels):

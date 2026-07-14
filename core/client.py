@@ -34,6 +34,7 @@ import core.database as database
 import utils.config_models as config_models
 import utils.system as syst
 from utils.constants import owo_dusk_api, version
+from utils.errors import suppress_and_log, suppress_and_log_block
 from utils.loader import (
     captcha_settings_dict,
     console_width,
@@ -277,27 +278,23 @@ class MyClient(commands.Bot):
         files = os.listdir(syst.system.resource_path("./core/cogs"))  # Get the list of files
         self.random.shuffle(files)
         self.refresh_commands_dict()
-        for filename in files:
-            if filename.endswith(".py"):
-                extension = f"core.cogs.{filename[:-3]}"
-                if extension in self.extensions:
-                    """skip if already loaded"""
-                    self.refresh_commands_dict()
-                    if not self.commands_dict[str(filename[:-3])]:
-                        await self.unload_cog(extension)
-                    continue
-                try:
+        with suppress_and_log_block("Starting Cog"):
+            for filename in files:
+                if filename.endswith(".py"):
+                    extension = f"core.cogs.{filename[:-3]}"
+                    if extension in self.extensions:
+                        """skip if already loaded"""
+                        self.refresh_commands_dict()
+                        if not self.commands_dict[str(filename[:-3])]:
+                            await self.unload_cog(extension)
+                        continue
+
                     await self.sleep_till(
                         self.global_settings_dict.account.commandsStart
                     )
                     if self.commands_dict.get(str(filename[:-3]), False):
                         await self.load_extension(extension)
 
-                except Exception as e:
-                    await self.log(
-                        f"Error - Failed to load extension {extension}: {e}", "#c25560"
-                    )
-                    traceback.print_exc()
 
         if "core.cogs.captcha" not in self.extensions:
             await self.log(
@@ -321,12 +318,11 @@ class MyClient(commands.Bot):
 
             await self.start_cogs()
 
+    @suppress_and_log("Unloading Cog")
     async def unload_cog(self, cog_name):
-        try:
-            if cog_name in self.extensions:
-                await self.unload_extension(cog_name)
-        except Exception as e:
-            await self.log(f"Error - Failed to unload cog {cog_name}: {e}", "#c25560")
+        if cog_name in self.extensions:
+            await self.unload_extension(cog_name)
+
 
     def refresh_commands_dict(self):
         commands_obj = self.settings_dict.commands
@@ -421,56 +417,55 @@ class MyClient(commands.Bot):
 
         return f"{prefix}{data['cmd_name']} {data.get('cmd_arguments') or ''}".strip()
 
+    @suppress_and_log("Attempting to append queue")
     async def put_queue(self, cmd_data, priority=False, quick=False):
-        # cnf = self.misc["command_info"]
-        try:
-            while (
-                not self.command_handler_status["state"]
-                or self.command_handler_status["hold_handler"]
-                or self.command_handler_status["sleep"]
-                or self.command_handler_status["captcha"]
+        while (
+            not self.command_handler_status["state"]
+            or self.command_handler_status["hold_handler"]
+            or self.command_handler_status["sleep"]
+            or self.command_handler_status["captcha"]
+        ):
+            if priority and (
+                not self.command_handler_status["sleep"]
+                and not self.command_handler_status["hold_handler"]
+                and not self.command_handler_status["captcha"]
             ):
-                if priority and (
-                    not self.command_handler_status["sleep"]
-                    and not self.command_handler_status["hold_handler"]
-                    and not self.command_handler_status["captcha"]
-                ):
-                    break
-                await asyncio.sleep(self.random.uniform(1.4, 2.9))
+                break
+            await asyncio.sleep(self.random.uniform(1.4, 2.9))
 
-            if self.cmds_state[cmd_data["id"]]["in_queue"]:
-                # Add exception for custom commands
-                if cmd_data["id"] != "customcommand":
-                    # Ensure command already in queue is not readded to prevent spam
-                    await self.log(
-                        f"Error - command with id: {cmd_data['id']} already in queue, being attempted to be added back.",
-                        "#c25560",
-                    )
-                    return
-
-            # Get priority
-            # priority_int = cnf[cmd_data["id"]].get("priority") if not quick else 0
-            priority_int = self.cmd_priorities.get(cmd_data["id"])
-
-            if not priority_int and priority_int != 0:
+        if self.cmds_state[cmd_data["id"]]["in_queue"]:
+            # Add exception for custom commands
+            if cmd_data["id"] != "customcommand":
+                # Ensure command already in queue is not readded to prevent spam
                 await self.log(
-                    f"Error - command with id: {cmd_data['id']} is missing priority.",
+                    f"Error - command with id: {cmd_data['id']} already in queue, being attempted to be added back.",
                     "#c25560",
                 )
                 return
 
-            async with self.lock:
-                await self.queue.put(
-                    (
-                        priority_int,  # Priority to sort commands with
-                        next(self.cmd_counter),  # A counter to serve as a tie-breaker
-                        deepcopy(cmd_data),  # actual data
-                    )
-                )
-                self.cmds_state[cmd_data["id"]]["in_queue"] = True
-        except Exception as e:
-            await self.log(f"Error - {e}, during put_queue", "#c25560")
+        # Get priority
+        # priority_int = cnf[cmd_data["id"]].get("priority") if not quick else 0
+        priority_int = self.cmd_priorities.get(cmd_data["id"])
 
+        if not priority_int and priority_int != 0:
+            await self.log(
+                f"Error - command with id: {cmd_data['id']} is missing priority.",
+                "#c25560",
+            )
+            return
+
+        async with self.lock:
+            await self.queue.put(
+                (
+                    priority_int,  # Priority to sort commands with
+                    next(self.cmd_counter),  # A counter to serve as a tie-breaker
+                    deepcopy(cmd_data),  # actual data
+                )
+            )
+            self.cmds_state[cmd_data["id"]]["in_queue"] = True
+
+
+    @suppress_and_log("Remove Queue")
     async def remove_queue(self, cmd_data=None, id=None):
         if not cmd_data and not id:
             await self.log(
@@ -478,17 +473,14 @@ class MyClient(commands.Bot):
                 "#c25560",
             )
             return
-        try:
-            async with self.lock:
-                for index, command in enumerate(self.checks):
-                    if cmd_data:
-                        if command == cmd_data:
-                            self.checks.pop(index)
-                    else:
-                        if command.get("id", None) == id:
-                            self.checks.pop(index)
-        except Exception as e:
-            await self.log(f"Error: {e}, during remove_queue", "#c25560")
+        async with self.lock:
+            for index, command in enumerate(self.checks):
+                if cmd_data:
+                    if command == cmd_data:
+                        self.checks.pop(index)
+                else:
+                    if command.get("id", None) == id:
+                        self.checks.pop(index)
 
     async def search_checks(self, id):
         async with self.lock:
@@ -706,20 +698,19 @@ class MyClient(commands.Bot):
                     await channel.send(message, silent=silent)
                 await self.set_stat(True)
 
+    @suppress_and_log("Sending Slash Command")
     async def slashCommandSender(self, msg, color, channel, **kwargs):
         if not channel:
             channel = self.cm
-        try:
-            if not self.slash_commands.get(str(channel.id)):
-                await self.fetch_slash_commands(channel)
+        if not self.slash_commands.get(str(channel.id)):
+            await self.fetch_slash_commands(channel)
 
-            for command in self.slash_commands[str(channel.id)]:
-                if command.name == msg:
-                    await self.wait_until_ready()
-                    await command(**kwargs)
-                    await self.log(f"Ran: /{msg}", color if color else "#5432a8")
-        except Exception as e:
-            await self.log(f"Error: {e}, during slashCommandSender", "#c25560")
+        for command in self.slash_commands[str(channel.id)]:
+            if command.name == msg:
+                await self.wait_until_ready()
+                await command(**kwargs)
+                await self.log(f"Ran: /{msg}", color if color else "#5432a8")
+
 
     def calc_time(self):
         pst_timezone = pytz.timezone("US/Pacific")  # gets timezone

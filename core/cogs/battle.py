@@ -58,99 +58,95 @@ class Battle(BaseCog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        try:
-            if (
-                message.channel.id == self.bot.cm.id
-                and message.author.id == self.bot.owo_bot_id
-            ):
-                if message.embeds:
-                    for embed in message.embeds:
-                        if (
-                            embed.author.name is not None
-                            and f"{self.bot.user.display_name} goes into battle!"
-                            in embed.author.name
-                        ):
-                            if embed.footer:
-                                if self.settings.show_streak:
-                                    await self.bot.log(
-                                        f"{embed.footer.text}", "#292252"
-                                    )
-                                if "Streak ended at" in embed.footer.text:
-                                    if self.settings.notify_streak_loss:
-                                        notify(
-                                            embed.footer.text, "You lost your streak!"
-                                        )
-                            if message.reference is not None:
-                                """Return if embed"""
-                                referenced_message = (
-                                    await message.channel.fetch_message(
-                                        message.reference.message_id
-                                    )
-                                )
-
-                                if (
-                                    not referenced_message.embeds
-                                    and "You found a **weapon crate**!"
-                                    in referenced_message.content
-                                ):
-                                    # Ignore reply and proceeding!
-                                    pass
-                                else:
-                                    # Return from battle embed reply
-                                    return
-
-                            await self.bot.remove_queue(id="battle")
-                            await self.bot.sleep(self.settings.get_cd())
-                            self.cmd["cmd_name"] = (
-                                self.bot.alias["battle"]["shortform"]
-                                if self.settings.shortform
-                                else self.bot.alias["battle"]["normal"]
-                            )
-                            await self.bot.put_queue(self.cmd)
-
-            cnf = self.bot.quest_help_request["battle"]
-            if not cnf["enabled"]:
-                return
-
-            if f"<@{cnf['userid']}" == message.content:
-                emb = message.embeds[0] if message.embeds else None
-                if not emb:
-                    return
-                if (
-                    emb.author.name is not None
-                    and self.bot.user.display_name in emb.author.name
-                ):
+        if (
+            message.channel.id == self.bot.cm.id
+            and message.author.id == self.bot.owo_bot_id
+        ):
+            if message.embeds:
+                for embed in message.embeds:
                     if (
-                        emb.footer.text.lower()
-                        == "this challenge will expire in 10 minutes"
+                        embed.author.name is not None
+                        and f"{self.bot.user.display_name} goes into battle!"
+                        in embed.author.name
                     ):
-                        await self.bot.remove_queue(id="battle")
-                        self.bot.quest_help_request["battle"]["till"] -= 1
-                        (
-                            current,
-                            completed,
-                        ) = await self.bot.quest_handler.qh.update_progress(
-                            self.bot.user.id, cnf["userid"], "battle_friend"
-                        )
-                        if current is not None:
-                            await self.bot.quest_handler.sync_progress(
-                                "battle_friend", current, completed
+                        if embed.footer:
+                            if self.settings.show_streak:
+                                await self.bot.log(
+                                    f"{embed.footer.text}", "#292252"
+                                )
+                            if "Streak ended at" in embed.footer.text:
+                                if self.settings.notify_streak_loss:
+                                    notify(
+                                        embed.footer.text, "You lost your streak!"
+                                    )
+                        if message.reference is not None:
+                            """Return if embed"""
+                            referenced_message = (
+                                await message.channel.fetch_message(
+                                    message.reference.message_id
+                                )
                             )
 
-                        if (
-                            completed
-                            or self.bot.quest_help_request["battle"]["till"] <= 0
-                        ):
-                            # reset
-                            self.bot.quest_help_request["battle"] = {
-                                "till": 0,
-                                "enabled": False,
-                                "userid": 0,
-                                "channel": 0,
-                            }
+                            if (
+                                not referenced_message.embeds
+                                and "You found a **weapon crate**!"
+                                in referenced_message.content
+                            ):
+                                # Ignore reply and proceeding!
+                                pass
+                            else:
+                                # Return from battle embed reply
+                                return
 
-        except Exception as e:
-            await self.bot.log(f"Error - {e}, During battle on_message()", "#c25560")
+                        await self.bot.remove_queue(id="battle")
+                        await self.bot.sleep(self.settings.get_cd())
+                        self.cmd["cmd_name"] = (
+                            self.bot.alias["battle"]["shortform"]
+                            if self.settings.shortform
+                            else self.bot.alias["battle"]["normal"]
+                        )
+                        await self.bot.put_queue(self.cmd)
+
+        cnf = self.bot.quest_help_request["battle"]
+        if not cnf["enabled"]:
+            return
+
+        if f"<@{cnf['userid']}" == message.content:
+            emb = message.embeds[0] if message.embeds else None
+            if not emb:
+                return
+            if (
+                emb.author.name is not None
+                and self.bot.user.display_name in emb.author.name
+            ):
+                if (
+                    emb.footer.text.lower()
+                    == "this challenge will expire in 10 minutes"
+                ):
+                    await self.bot.remove_queue(id="battle")
+                    self.bot.quest_help_request["battle"]["till"] -= 1
+                    (
+                        current,
+                        completed,
+                    ) = await self.bot.quest_handler.qh.update_progress(
+                        self.bot.user.id, cnf["userid"], "battle_friend"
+                    )
+                    if current is not None:
+                        await self.bot.quest_handler.sync_progress(
+                            "battle_friend", current, completed
+                        )
+
+                    if (
+                        completed
+                        or self.bot.quest_help_request["battle"]["till"] <= 0
+                    ):
+                        # reset
+                        self.bot.quest_help_request["battle"] = {
+                            "till": 0,
+                            "enabled": False,
+                            "userid": 0,
+                            "channel": 0,
+                        }
 
 
 async def setup(bot):

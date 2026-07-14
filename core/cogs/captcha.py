@@ -21,6 +21,7 @@ from discord import DMChannel
 from discord.ext import commands, tasks
 
 from core.cogs._BASE import BaseCog
+from utils.errors import suppress_and_log_block
 from utils.system.notification import notify
 from utils.system.system import on_mobile, run_system_command
 from utils.timestamp import validate_snowflake
@@ -178,10 +179,8 @@ class Captcha(BaseCog):
                     # In case code sends one command after captcha, triggering captcha message twice.
                     pass
             else:
-                try:
-                    notify(notification_content, f"Captcha - {self.bot.username}!")
-                except Exception as e:
-                    print(f"{e} - at notifs")
+                notify(notification_content, f"Captcha - {self.bot.username}!")
+
 
         """Play audio file"""
         """
@@ -191,19 +190,18 @@ class Captcha(BaseCog):
         better error handling for missing PATH
         """
         if self.captcha_settings.playAudio.enabled:
-            path = get_path(self.captcha_settings.playAudio.path)
-            try:
+            with suppress_and_log_block("Captcha Play Audio"):
+                path = get_path(self.captcha_settings.playAudio.path)
                 if on_mobile:
                     run_system_command(
                         f"termux-media-player play {path}", timeout=5, retry=True
                     )
                 else:
                     self.sound = playsound(path, block=False)
-            except Exception as e:
-                print(f"{e} - at audio")
+
         """Toast/Popup"""
         if self.toast_settings.enabled:
-            try:
+            with suppress_and_log_block("Captcha Toast"):
                 if on_mobile:
                     settings = self.toast_settings.termuxToast
                     run_system_command(
@@ -213,48 +211,39 @@ class Captcha(BaseCog):
                     )
                 else:
                     self.bot.add_popup_queue(channel_name, captcha_type)
-            except Exception as e:
-                print(f"{e} - at Toast/Popup")
-        """Termux - Vibrate"""
-        if self.termux_settings.vibrate.enabled:
-            try:
-                if on_mobile:
-                    run_system_command(
-                        f"termux-vibrate -f -d {self.termux_settings.vibrate.time * 1000}",
-                        timeout=5,
-                        retry=True,
-                    )
-                else:
-                    pass
-            except Exception as e:
-                print(f"{e} - at Toast/Popup")
-        """Termux - TTS"""
-        if self.termux_settings.textToSpeech.enabled:
-            try:
-                if on_mobile:
-                    run_system_command(
-                        f"termux-tts-speak {getattr(self.termux_settings.textToSpeech, content_type)}",
-                        timeout=7,
-                        retry=False,
-                    )
-                else:
-                    pass
-            except Exception as e:
-                print(f"{e} - at Toast/Popup")
+
+        if on_mobile:
+            """Termux - Vibrate"""
+            if self.termux_settings.vibrate.enabled:
+                run_system_command(
+                    f"termux-vibrate -f -d {self.termux_settings.vibrate.time * 1000}",
+                    timeout=5,
+                    retry=True,
+                )
+
+            """Termux - TTS"""
+            if self.termux_settings.textToSpeech.enabled:
+                run_system_command(
+                    f"termux-tts-speak {getattr(self.termux_settings.textToSpeech, content_type)}",
+                    timeout=7,
+                    retry=False,
+                )
+
         """Open captcha website"""
         if self.captcha_settings.openCaptchaWebsite and not self.captcha_site_opened:
-            if on_mobile:
-                run_system_command(f"termux-open {url}", timeout=5, retry=True)
-            else:
-                if sys.platform.startswith("win"):
-                    run_system_command(f"start {url}", timeout=5, retry=True)
-                elif sys.platform == "darwin":
-                    # Macos
-                    run_system_command(f"open {url}", timeout=5, retry=True)
+            with suppress_and_log_block("Captcha Open Website"):
+                if on_mobile:
+                    run_system_command(f"termux-open {url}", timeout=5, retry=True)
                 else:
-                    # Linux
-                    run_system_command(f"xdg-open {url}", timeout=5, retry=True)
-            self.captcha_site_opened = True
+                    if sys.platform.startswith("win"):
+                        run_system_command(f"start {url}", timeout=5, retry=True)
+                    elif sys.platform == "darwin":
+                        # Macos
+                        run_system_command(f"open {url}", timeout=5, retry=True)
+                    else:
+                        # Linux
+                        run_system_command(f"xdg-open {url}", timeout=5, retry=True)
+                self.captcha_site_opened = True
 
     async def handle_solves(self):
         if self.bot.misc["hostMode"]:
@@ -262,7 +251,7 @@ class Captcha(BaseCog):
 
         """Play Audio"""
         if self.captcha_settings.playAudio.enabled:
-            try:
+            with suppress_and_log_block("Captcha Stop Audio"):
                 if on_mobile:
                     run_system_command(
                         "termux-media-player stop", timeout=5, retry=True
@@ -271,8 +260,6 @@ class Captcha(BaseCog):
                     if self.sound is not None:
                         if self.sound.is_alive():
                             self.sound.stop()
-            except Exception as e:
-                print(f"{e} - at audio")
 
         """Reccurrring notification"""
         if (
