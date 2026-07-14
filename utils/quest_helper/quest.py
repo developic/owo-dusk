@@ -43,10 +43,6 @@ class QuestHandler:
         self.bulletine = []
         self.lock = asyncio.Lock()
         self.api_key = api
-        if api == "helloworld":
-            print(
-                f"{COLORS.BOLD_RED} Warning: Using test key `helloworld`. This should only be used for testing. Please edit `OwO-Dusk/config/global_settings.json` file with your quest api key.\nThis api key is entirely free and can be recieved from: {COLORS.RESET}{COLORS.BOLD_BLUE}https://ocr.space/ocrapi/freekey {COLORS.RESET}"
-            )
 
     async def register_helpable_quest(
         self, quest_detail: dict, userid: int, channel_id: int, guild_id: int

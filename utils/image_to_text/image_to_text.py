@@ -24,6 +24,9 @@ async def get_text_from_url(
     if api_key == "":
         api_key = "helloworld"
 
+    if api_key == "helloworld":
+        print("Warning: Using test key `helloworld`. This should only be used for testing. Please edit `OwO-Dusk/config/global_settings.json` file with your quest api key.\nThis api key is entirely free and can be recieved from: https://ocr.space/ocrapi/freekey")
+
     """payload = {
         'apikey': api_key,
         'url': image_url,
