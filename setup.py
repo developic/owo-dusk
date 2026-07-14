@@ -10,22 +10,15 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-import os
-import sys
 import subprocess
+import sys
 import tomllib
 
+import utils.system as syst
 from utils.colors import COLORS
 
-from utils.system import (
-    clear,
-    install_package,
-    install_termux_package,
-    is_termux,
-)
-
 try:
-    clear()
+    syst.system.clear()
 except Exception:
     pass
 
@@ -58,22 +51,22 @@ if scratchSetup:
     print(f"{COLORS.BOLD_CYAN}[0]attempting to install requirements.txt{COLORS.RESET}")
     try:
         try:
-            install_package("-r", "requirements.txt")
+            syst.system.install_package("-r", "requirements.txt")
         except Exception:
-            if is_termux():
+            if syst.system.on_mobile:
                 print(
                     f"{COLORS.BOLD_CYAN}[0]attempting to retry installing requirements.txt, after ensuring pkgs are uptodate{COLORS.RESET}"
                 )
                 subprocess.check_call(["pkg", "update", "-y"])
                 subprocess.check_call(["pkg", "upgrade", "-y"])
-                install_package("-r", "requirements.txt")
+                syst.system.install_package("-r", "requirements.txt")
             else:
                 raise
         print(
             f"{COLORS.BOLD_CYAN}[0]Installed modules from requirements.txt successfully!{COLORS.RESET}"
         )
         print(f"{COLORS.BOLD_CYAN}[0]attempting to install numpy and pil{COLORS.RESET}")
-        if is_termux():
+        if syst.system.on_mobile:
             # Termux
             print(f"{COLORS.BOLD_CYAN}[0]installing for termux...{COLORS.RESET}")
             print()
@@ -83,19 +76,19 @@ if scratchSetup:
             print()
 
             # Numpy Installation
-            if not install_termux_package("python-numpy", "numpy"):
+            if not syst.system.install_termux_package("python-numpy", "numpy"):
                 raise RuntimeError("Failed to install numpy")
 
             # PIL Installation
-            if not install_termux_package("python-pillow", "PIL"):
+            if not syst.system.install_termux_package("python-pillow", "PIL"):
                 raise RuntimeError("Failed to install PIL")
 
             # Termux-api installation
-            if not install_termux_package("termux-api"):
+            if not syst.system.install_termux_package("termux-api"):
                 raise RuntimeError("Failed to install termux-api")
 
             if cap_cnf_dict["image_solver"]["enabled"]:
-                if not install_termux_package("python-onnxruntime", "onnxruntime"):
+                if not syst.system.install_termux_package("python-onnxruntime", "onnxruntime"):
                     raise RuntimeError("Failed to install onnxruntime")
 
         else:
@@ -111,7 +104,7 @@ if scratchSetup:
                 packages.append("onnxruntime")
 
             try:
-                install_package(*packages)
+                syst.system.install_package(*packages)
                 print(
                     f"{COLORS.BOLD_CYAN}[0]Installed numpy, PIL and dependencies successfully!{COLORS.RESET}"
                 )
@@ -129,8 +122,9 @@ if scratchSetup:
     print()
 
 try:
-    import discord
     import asyncio
+
+    import discord
 except ImportError:
     print(
         f"{COLORS.BOLD_RED}[x]Required modules are not installed.\nPlease run setup again and choose option 1 (setup from scratch) to install them first.{COLORS.RESET}"

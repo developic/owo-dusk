@@ -10,18 +10,7 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-import time
+from . import components, headers, message
 
-
-def generate_nonce():
-    """Generate a Discord-style snowflake nonce."""
-    now = int(time.time() * 1000)
-    a = now - 1420070400000
-    r = a << 22
-    return str(r)
-
-
-def check_list_index(idx: int, item: list):
-    if 0 <= idx < len(item):
-        return True, item[idx]
-    return False, None
+# This shuts Ruff warnings.
+__all__ = ["components", "headers", "message"]

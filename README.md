@@ -62,7 +62,7 @@ Best selfbot for owobot currently with alot of cool features like Boss battles, 
 ---
 
 <div>
-    <center><img src="https://repobeats.axiom.co/api/embed/0a1054d566f34198e5adb680c8c95884f514b0bc.svg" alt="Alt" title="Repobeats analytics image"></div></center>
+    <center><img src="https://repobeats.axiom.co/api/embed/213982ef347911b0cd5333247ae2333419ff7ec9.svg" alt="Analatics Image"></div></center>
 </div>
 
 ---

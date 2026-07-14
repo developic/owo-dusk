@@ -10,10 +10,11 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-import aiohttp
-import requests
 import asyncio
 import json
+
+import aiohttp
+import requests
 
 
 class captchaClient:

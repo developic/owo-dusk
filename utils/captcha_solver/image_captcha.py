@@ -11,9 +11,10 @@
 # (at your option) any later version.
 
 
-import onnxruntime
-import numpy as np
 import io
+
+import numpy as np
+import onnxruntime
 from PIL import Image
 
 """Configurations"""
