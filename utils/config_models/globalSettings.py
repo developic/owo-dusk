@@ -100,7 +100,7 @@ class TextCommands:
 class Webhook:
     def __init__(self, d: dict):
         self.enabled = expected_fetch(d, "enabled", bool)
-        self.logCommandSend = expected_fetch(d, "enabled", bool)
+        self.logCommandSend = expected_fetch(d, "logCommandSend", bool)
         self.webhookUrl = d.get("webhookUrl") or ""
         self.webhookCaptchaUrl = d.get("webhookCaptchaUrl") or ""
         self.pingUserId = d.get("webhookUserIdToPingOnCaptcha") or ""
