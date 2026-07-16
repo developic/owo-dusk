@@ -181,7 +181,6 @@ class Captcha(BaseCog):
             else:
                 notify(notification_content, f"Captcha - {self.bot.username}!")
 
-
         """Play audio file"""
         """
         TASK: add two checks, check the path for the file in both outside utils folder

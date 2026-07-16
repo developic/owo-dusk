@@ -105,7 +105,9 @@ def notify_version_changes():
             f"New Update detected: {version_json['version']}",
         )
         if version_json["important_update"]:
-            syst.system.print_box("It is recommended to update....", "bold light_yellow3")
+            syst.system.print_box(
+                "It is recommended to update....", "bold light_yellow3"
+            )
 
 
 @suppress_and_log("Ask To Star Repo")

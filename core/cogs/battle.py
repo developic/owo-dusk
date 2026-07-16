@@ -71,20 +71,14 @@ class Battle(BaseCog):
                     ):
                         if embed.footer:
                             if self.settings.show_streak:
-                                await self.bot.log(
-                                    f"{embed.footer.text}", "#292252"
-                                )
+                                await self.bot.log(f"{embed.footer.text}", "#292252")
                             if "Streak ended at" in embed.footer.text:
                                 if self.settings.notify_streak_loss:
-                                    notify(
-                                        embed.footer.text, "You lost your streak!"
-                                    )
+                                    notify(embed.footer.text, "You lost your streak!")
                         if message.reference is not None:
                             """Return if embed"""
-                            referenced_message = (
-                                await message.channel.fetch_message(
-                                    message.reference.message_id
-                                )
+                            referenced_message = await message.channel.fetch_message(
+                                message.reference.message_id
                             )
 
                             if (
@@ -136,10 +130,7 @@ class Battle(BaseCog):
                             "battle_friend", current, completed
                         )
 
-                    if (
-                        completed
-                        or self.bot.quest_help_request["battle"]["till"] <= 0
-                    ):
+                    if completed or self.bot.quest_help_request["battle"]["till"] <= 0:
                         # reset
                         self.bot.quest_help_request["battle"] = {
                             "till": 0,

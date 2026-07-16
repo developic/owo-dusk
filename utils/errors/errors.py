@@ -24,7 +24,7 @@ from rich.terminal_theme import MONOKAI
 from utils.errors import catbox
 
 DISCORD_TOKEN_REGEX = re.compile(
-    r'\b[A-Za-z0-9_-]{24,28}\.[A-Za-z0-9_-]{6,7}\.[A-Za-z0-9_-]{27,}\b'
+    r"\b[A-Za-z0-9_-]{24,28}\.[A-Za-z0-9_-]{6,7}\.[A-Za-z0-9_-]{27,}\b"
 )
 
 # Seperate console must be used to prevent recording what is not error
@@ -67,8 +67,9 @@ def _redact_discord_tokens(text: str) -> str:
     """
     Redacts Discord token like texts
     """
-    text = DISCORD_TOKEN_REGEX.sub('***DISCORD_TOKEN_REDACTED***', text)
+    text = DISCORD_TOKEN_REGEX.sub("***DISCORD_TOKEN_REDACTED***", text)
     return text
+
 
 def _upload_error_image():
     # Yes, the override is intended. Perhaps later we can use
@@ -78,7 +79,9 @@ def _upload_error_image():
     full_path = Path(filename).resolve()
 
     # Save Error as SVG and clear error
-    svg_content = console.export_svg(title="OwO-Dusk Error Report", theme=MONOKAI, clear=True)
+    svg_content = console.export_svg(
+        title="OwO-Dusk Error Report", theme=MONOKAI, clear=True
+    )
     svg_content = _redact_discord_tokens(svg_content)
     full_path.write_text(svg_content, encoding="utf-8")
 

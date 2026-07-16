@@ -19,16 +19,19 @@ CATBOX_API = "https://litterbox.catbox.moe/resources/internals/api.php"
 
 def upload_file(file_path: str) -> str | None:
     """
-    Uploads file to catbox.moe and returns url from 
+    Uploads file to catbox.moe and returns url from
     provided file path
     """
     try:
-        data = {"reqtype": "fileupload",
-        "time": "72h"}
+        data = {"reqtype": "fileupload", "time": "72h"}
 
         with open(file_path, "rb") as f:
             files = {
-                "fileToUpload": (os.path.basename(file_path), f, "application/octet-stream")
+                "fileToUpload": (
+                    os.path.basename(file_path),
+                    f,
+                    "application/octet-stream",
+                )
             }
             response = requests.post(CATBOX_API, data=data, files=files, timeout=2)
 

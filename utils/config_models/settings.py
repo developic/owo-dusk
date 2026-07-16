@@ -104,11 +104,11 @@ def find_least_gap(list_to_check):
 class AutoQuest:
     def __init__(self, d: dict):
         self.enabled = expected_fetch(d, "enabled", bool)
-        
+
         helpChannel = expected_fetch(d, "helpChannel", dict)
         self.useHelpChannel = expected_fetch(helpChannel, "postInHelpChannel", bool)
         self.channelId = expected_fetch(helpChannel, "channelId", int)
-        
+
         self.helpOthers = expected_fetch(d, "helpOthers", bool)
         self.canEnable = expected_fetch(d, "enableCommandsToCompleteQuest", bool)
         self.checkCooldown = expected_fetch(d, "checkCooldown", list, float)
@@ -172,7 +172,7 @@ class Gems:
         self.gemsToUse = expected_fetch(d, "gemsToUse", dict)
         self.disableHuntIfNoGems = expected_fetch(d, "disableHuntIfNoGems", bool)
         self.dynamicSpecialGem = expected_fetch(d, "dynamicSpecialGemUsage", bool)
-        
+
         order = expected_fetch(d, "order", dict)
         self.useLowest = expected_fetch(order, "lowestToHighest", bool)
 
@@ -212,7 +212,9 @@ class Misspell:
         self.enabled = expected_fetch(d, "enabled", bool)
         self.frequency = expected_fetch(d, "frequencyPercentage", int)
         self.baseDelay = expected_fetch(d, "baseDelay", list, float)
-        self.rectificationTime = expected_fetch(d, "errorRectificationTimePerLetter", list, float)
+        self.rectificationTime = expected_fetch(
+            d, "errorRectificationTimePerLetter", list, float
+        )
 
         validators.validate_frequency(self.frequency)
 
@@ -290,11 +292,12 @@ class GamblingGoals:
         self.enabled = expected_fetch(d, "enabled", bool)
         self.amount = expected_fetch(d, "amount", int)
 
+
 class GambleItem:
     def __init__(self, d: dict):
         self.enabled = expected_fetch(d, "enabled", bool)
         self.startValue = expected_fetch(d, "startValue", int)
-        self.multiplier = expected_fetch(d, "multiplierOnLose", int) 
+        self.multiplier = expected_fetch(d, "multiplierOnLose", int)
         self.cooldown = expected_fetch(d, "cooldown", list, float)
 
         cf_options = d.get("options", None)

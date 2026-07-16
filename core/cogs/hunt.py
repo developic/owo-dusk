@@ -195,7 +195,9 @@ class Hunt(BaseCog):
                 self.bot.update_cash(5, reduce=True)
 
                 # Get Tiers
-                result_list, webhook_result_list, highest_rank = self.get_emoji_tier(msg_line)
+                result_list, webhook_result_list, highest_rank = self.get_emoji_tier(
+                    msg_line
+                )
                 if webhook_result_list:
                     # Handle webhook
                     if (

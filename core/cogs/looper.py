@@ -142,7 +142,8 @@ class Looper(BaseCog):
                 "id": "pray",
             },
             "curse": {
-                "enabled": enabled["curse"] and not enabled["pray"], # Temporary fix, needs to be removed!
+                "enabled": enabled["curse"]
+                and not enabled["pray"],  # Temporary fix, needs to be removed!
                 "next_run": now
                 + (
                     self.curse_settings.get_cd()

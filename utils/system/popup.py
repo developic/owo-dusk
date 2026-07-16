@@ -19,8 +19,9 @@ from utils.loader import global_settings_dict
 popup_queue = Queue()
 
 # Task: Maybe better to handle termux popup directly from here
-# instead of handling it externally making there be a need 
+# instead of handling it externally making there be a need
 # to control imports
+
 
 @suppress_and_log("Popup Queue")
 def popup_main_loop():
@@ -87,6 +88,7 @@ def popup_main_loop():
 
     check_queue()
     root.mainloop()
+
 
 @suppress_and_log("Adding to Popup queue")
 def add_popup_queue(username, channel_name, captcha_type=None):

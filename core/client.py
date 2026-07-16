@@ -275,7 +275,9 @@ class MyClient(commands.Bot):
                 )
 
     async def start_cogs(self):
-        files = os.listdir(syst.system.resource_path("./core/cogs"))  # Get the list of files
+        files = os.listdir(
+            syst.system.resource_path("./core/cogs")
+        )  # Get the list of files
         self.random.shuffle(files)
         self.refresh_commands_dict()
         with suppress_and_log_block("Starting Cog"):
@@ -294,7 +296,6 @@ class MyClient(commands.Bot):
                     )
                     if self.commands_dict.get(str(filename[:-3]), False):
                         await self.load_extension(extension)
-
 
         if "core.cogs.captcha" not in self.extensions:
             await self.log(
@@ -322,7 +323,6 @@ class MyClient(commands.Bot):
     async def unload_cog(self, cog_name):
         if cog_name in self.extensions:
             await self.unload_extension(cog_name)
-
 
     def refresh_commands_dict(self):
         commands_obj = self.settings_dict.commands
@@ -463,7 +463,6 @@ class MyClient(commands.Bot):
                 )
             )
             self.cmds_state[cmd_data["id"]]["in_queue"] = True
-
 
     @suppress_and_log("Remove Queue")
     async def remove_queue(self, cmd_data=None, id=None):
@@ -710,7 +709,6 @@ class MyClient(commands.Bot):
                 await self.wait_until_ready()
                 await command(**kwargs)
                 await self.log(f"Ran: /{msg}", color if color else "#5432a8")
-
 
     def calc_time(self):
         pst_timezone = pytz.timezone("US/Pacific")  # gets timezone

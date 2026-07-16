@@ -13,7 +13,6 @@
 import asyncio
 
 import utils.timestamp as timestamp
-from utils.colors import COLORS
 from utils.image_to_text.get_quest_details import get_quest_details
 from utils.quest_helper.quest_types import QUEST_IDS
 

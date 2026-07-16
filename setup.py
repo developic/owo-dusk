@@ -88,7 +88,9 @@ if scratchSetup:
                 raise RuntimeError("Failed to install termux-api")
 
             if cap_cnf_dict["image_solver"]["enabled"]:
-                if not syst.system.install_termux_package("python-onnxruntime", "onnxruntime"):
+                if not syst.system.install_termux_package(
+                    "python-onnxruntime", "onnxruntime"
+                ):
                     raise RuntimeError("Failed to install onnxruntime")
 
         else:

@@ -30,7 +30,7 @@ from utils.config_models.helpers import expected_fetch
 class GlobalSettings:
     def __init__(self, d: dict):
         self.typingIndicator = expected_fetch(d, "typingIndicator", bool)
-        self.silentMessage = expected_fetch(d, "silentMessages", bool)  
+        self.silentMessage = expected_fetch(d, "silentMessages", bool)
         self.offlineStatus = expected_fetch(d, "offlineStatus", bool)
         self.ocrApi = expected_fetch(d, "ocrApi", str)
 
@@ -56,7 +56,9 @@ class GlobalSettings:
         self.batteryCheck = BatteryCheck(expected_fetch(d, "batteryCheck", dict))
 
         # Channel Switcher
-        self.channelSwitcher = ChannelSwitcher(expected_fetch(d, "channelSwitcher", dict))
+        self.channelSwitcher = ChannelSwitcher(
+            expected_fetch(d, "channelSwitcher", dict)
+        )
 
 
 class Website:
@@ -71,8 +73,10 @@ class Website:
 class Account:
     def __init__(self, d: dict):
         self.startupDelay = expected_fetch(d, "startupDelay", list, float)
-        self.commandsStart = expected_fetch(d, "commandsStartDelay", list, float)  
-        self.commandsHandlerStart = expected_fetch(d, "commandsHandlerStartDelay", list, float)
+        self.commandsStart = expected_fetch(d, "commandsStartDelay", list, float)
+        self.commandsHandlerStart = expected_fetch(
+            d, "commandsHandlerStartDelay", list, float
+        )
 
         # Ensures all cooldowns are valid:
         # May want to consider namings in global_settings.json file.
@@ -84,11 +88,9 @@ class Account:
 class TextCommands:
     def __init__(self, d: dict):
         self.prefix = expected_fetch(d, "prefix", str)
-        self.stopCommand = expected_fetch(d, "commandToStopUser", str)  
-        self.startCommand = expected_fetch(d, "commandToStartUser", str)  
-        self.restartCommand = expected_fetch(
-            d, "commandToRestartAfterCaptcha", str
-        )  
+        self.stopCommand = expected_fetch(d, "commandToStopUser", str)
+        self.startCommand = expected_fetch(d, "commandToStartUser", str)
+        self.restartCommand = expected_fetch(d, "commandToRestartAfterCaptcha", str)
         self.switchChannelCommand = expected_fetch(d, "CommandToSwitchChannel", str)
         self.sleepCommand = expected_fetch(d, "commandToSleep", str)
         self.defaultSleepDuration = expected_fetch(d, "defaultSleepDuration", int)
@@ -101,7 +103,7 @@ class Webhook:
         self.logCommandSend = expected_fetch(d, "enabled", bool)
         self.webhookUrl = d.get("webhookUrl") or ""
         self.webhookCaptchaUrl = d.get("webhookCaptchaUrl") or ""
-        self.pingUserId = d.get("webhookUserIdToPingOnCaptcha") or ""  
+        self.pingUserId = d.get("webhookUserIdToPingOnCaptcha") or ""
 
         self.animalLog = AnimalLog(expected_fetch(d, "animalLog", dict))
 
@@ -138,34 +140,35 @@ class AnimalLogRank:
 class WebhookOthers:
     # Part of `Webhook` class
     def __init__(self, d: dict):
-        self.lootbox = expected_fetch(d, "logLootbox", bool)  
-        self.crate = expected_fetch(d, "logCrate", bool)  
+        self.lootbox = expected_fetch(d, "logLootbox", bool)
+        self.crate = expected_fetch(d, "logCrate", bool)
         self.logChannelSwitch = expected_fetch(d, "logChannelSwitch", bool)
 
 
 class Console:
     # Console commands on captcha.
     def __init__(self, d: dict):
-        self.onCaptcha = expected_fetch(d, "runConsoleCommandOnCaptcha", bool)  
-        self.onBan = expected_fetch(d, "runConsoleCommandOnBan", bool)  
+        self.onCaptcha = expected_fetch(d, "runConsoleCommandOnCaptcha", bool)
+        self.onBan = expected_fetch(d, "runConsoleCommandOnBan", bool)
 
-        self.captchaCommand = expected_fetch(d, "commandToRunOnCaptcha", str)  
+        self.captchaCommand = expected_fetch(d, "commandToRunOnCaptcha", str)
         self.banCommand = expected_fetch(d, "commandToRunOnBan", str)
+
 
 class Captcha:
     def __init__(self, d: dict):
         self.openCaptchaWebsite = expected_fetch(d, "openCaptchaWebsite", bool)
-        self.stopIfFailure = expected_fetch(d, "stopCodeIfFailedToSolve", bool)  
-        
+        self.stopIfFailure = expected_fetch(d, "stopCodeIfFailedToSolve", bool)
+
         # Notifications
         self.notifications = Notifications(expected_fetch(d, "notifications", dict))
-        
+
         # Play Audio
         self.playAudio = PlayAudio(expected_fetch(d, "playAudio", dict))
-        
+
         # Toast and Popup
         self.toastOrPopup = ToastOrPopup(expected_fetch(d, "toastOrPopup", dict))
-        
+
         # Termux specific
         self.termux = Termux(expected_fetch(d, "termux", dict))
 
@@ -244,11 +247,11 @@ class ChannelSwitcher:
 
         self.allUsers = expected_fetch(
             expected_fetch(d, "allUsers", dict), "channels", list, int
-        )  
+        )
         self.users = []
         for user_dict in expected_fetch(d, "users", list, dict):
             self.users.append(User(user_dict))
-            
+
         self.interval = expected_fetch(d, "interval", list, float)
         self.delayBeforeSwitch = expected_fetch(d, "delayBeforeSwitch", list, float)
 

@@ -122,7 +122,7 @@ class Sell(BaseCog):
                     self.__dict__[f"{cmd}_lastran"] = time.monotonic()
 
             # To prevent sell and sac being send right after
-            await self.bot.sleep_till([1,2])
+            await self.bot.sleep_till([1, 2])
 
     async def cog_load(self):
         # start loop, cog will stay awake due to the necessity to calculate value
