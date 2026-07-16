@@ -89,7 +89,7 @@ def popup_main_loop():
     root.mainloop()
 
 @suppress_and_log("Adding to Popup queue")
-def add_popup_queue(self, channel_name, captcha_type=None):
+def add_popup_queue(username, channel_name, captcha_type=None):
     popup_queue.put(
         (
             (
@@ -97,7 +97,7 @@ def add_popup_queue(self, channel_name, captcha_type=None):
                 if captcha_type != "Ban"
                 else global_settings_dict.captcha.toastOrPopup.bannedContent
             ),
-            self.user.name,
+            username,
             channel_name,
             captcha_type,
         )
