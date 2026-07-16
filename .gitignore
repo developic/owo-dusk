@@ -118,4 +118,7 @@ Desktop.ini
 # Local configuration
 *.local
 
+# Error svg files
+*.svg
+
 
