@@ -54,6 +54,7 @@ class Reactionbot(BaseCog):
             "owo": self.bot.alias["owo"]["normal"],
         }
         arg = ""
+        channelId = None
 
         if id in ("pray", "curse"):
             settings = self.fetch_settings(id)
@@ -66,7 +67,6 @@ class Reactionbot(BaseCog):
                 if settings.count:
                     arg += f" {next(self.__dict__[f'{id}_counter'])}"
 
-            channelId = None
             if settings.custom_channel.enabled:
                 channelId = settings.custom_channel.channel
 
