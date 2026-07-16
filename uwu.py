@@ -138,11 +138,11 @@ def start_owodusk():
         "OwO-Dusk starting... If any issue arises visit out discord support server (link available in console or github)",
         "Starting OwO-Dusk! :>",
     )
+    # Start up tasks and services
+    setup_and_start_services()
 
     # Version Check
     notify_version_changes()
-    # Start up tasks and services
-    setup_and_start_services()
 
     tokens_and_channels = [
         line.strip().split() for line in open("tokens.txt", "r", encoding="utf-8")
