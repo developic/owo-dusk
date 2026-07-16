@@ -209,7 +209,7 @@ class Captcha(BaseCog):
                         retry=True,
                     )
                 else:
-                    self.bot.add_popup_queue(self.user.name, channel_name, captcha_type)
+                    self.bot.add_popup_queue(self.bot.user.name, channel_name, captcha_type)
 
         if on_mobile:
             """Termux - Vibrate"""
