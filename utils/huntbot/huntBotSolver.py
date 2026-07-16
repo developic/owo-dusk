@@ -71,6 +71,7 @@ def decode_base64_to_image(b64_string):
     buffer = io.BytesIO(raw_bytes)
     return Image.open(buffer)
 
+
 DECODED_IMAGES = []
 for item_list in priority_groups:
     for item in item_list:
@@ -80,7 +81,7 @@ for item_list in priority_groups:
 
 async def solve_hb_captcha(captcha_url, session):
     global semaphore
-    
+
     """
     the above is basically the size, img and path (name to be used if matched)
     """
@@ -94,7 +95,7 @@ async def solve_hb_captcha(captcha_url, session):
             else:
                 print("Failed to fetch a valid image.")
                 return ""
-        
+
         loop = asyncio.get_running_loop()
         ans = await loop.run_in_executor(None, match_pixels, large_array)
         return ans
@@ -103,9 +104,10 @@ async def solve_hb_captcha(captcha_url, session):
         print(f"Error fetching the captcha image: {e}")
         return ""
 
+
 def match_pixels(large_array):
     global DECODED_IMAGES
-    
+
     with semaphore:
         matches = []
         for img, (small_w, small_h), letter in DECODED_IMAGES:
