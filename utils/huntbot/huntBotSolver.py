@@ -18,11 +18,15 @@
 # (at your option) any later version.
 
 
+import asyncio
 import base64
 import io
+import threading
 
 import numpy as np
 from PIL import Image
+
+semaphore = threading.BoundedSemaphore(3)
 
 priority_groups = [
     list("abdegkmpqstvwxyz"),  # First priority
@@ -67,13 +71,16 @@ def decode_base64_to_image(b64_string):
     buffer = io.BytesIO(raw_bytes)
     return Image.open(buffer)
 
+DECODED_IMAGES = []
+for item_list in priority_groups:
+    for item in item_list:
+        img = decode_base64_to_image(encoded_image_dict[item])
+        DECODED_IMAGES.append((img, img.size, item))
+
 
 async def solve_hb_captcha(captcha_url, session):
-    checks = []
-    for item_list in priority_groups:
-        for item in item_list:
-            img = decode_base64_to_image(encoded_image_dict[item])
-            checks.append((img, img.size, item))
+    global semaphore
+    
     """
     the above is basically the size, img and path (name to be used if matched)
     """
@@ -87,33 +94,42 @@ async def solve_hb_captcha(captcha_url, session):
             else:
                 print("Failed to fetch a valid image.")
                 return ""
+        
+        loop = asyncio.get_running_loop()
+        ans = await loop.run_in_executor(None, match_pixels, large_array)
+        return ans
 
     except Exception as e:
         print(f"Error fetching the captcha image: {e}")
         return ""
-    matches = []
-    for img, (small_w, small_h), letter in checks:
-        small_array = np.array(img)
-        """
-        This mask part makes sure transparent part are not compared.
-        with this the captcha can be easily solved.
-        """
-        mask = small_array[:, :, 3] > 0  # Alpha mask for non-transparent pixels
 
-        for y in range(large_array.shape[0] - small_h + 1):
-            for x in range(large_array.shape[1] - small_w + 1):
-                segment = large_array[y : y + small_h, x : x + small_w]
-                if np.array_equal(segment[mask], small_array[mask]):
-                    """
-                    prevents matching of letters close with prev matched letters
-                    """
-                    if not any(
-                        (m[0] - small_w < x < m[0] + small_w)
-                        and (m[1] - small_h < y < m[1] + small_h)
-                        for m in matches
-                    ):
-                        matches.append(
-                            (x, y, letter)
-                        )  # no need of x,y here but ill let it stay
-    matches = sorted(matches, key=lambda tup: tup[0])
-    return "".join([i[2] for i in matches])
+def match_pixels(large_array):
+    global DECODED_IMAGES
+    
+    with semaphore:
+        matches = []
+        for img, (small_w, small_h), letter in DECODED_IMAGES:
+            small_array = np.array(img)
+            """
+            This mask part makes sure transparent part are not compared.
+            with this the captcha can be easily solved.
+            """
+            mask = small_array[:, :, 3] > 0  # Alpha mask for non-transparent pixels
+
+            for y in range(large_array.shape[0] - small_h + 1):
+                for x in range(large_array.shape[1] - small_w + 1):
+                    segment = large_array[y : y + small_h, x : x + small_w]
+                    if np.array_equal(segment[mask], small_array[mask]):
+                        """
+                        prevents matching of letters close with prev matched letters
+                        """
+                        if not any(
+                            (m[0] - small_w < x < m[0] + small_w)
+                            and (m[1] - small_h < y < m[1] + small_h)
+                            for m in matches
+                        ):
+                            matches.append(
+                                (x, y, letter)
+                            )  # no need of x,y here but ill let it stay
+        matches = sorted(matches, key=lambda tup: tup[0])
+        return "".join([i[2] for i in matches])
