@@ -25,7 +25,6 @@ from datetime import datetime, timedelta, timezone
 import aiohttp
 import discord
 import pytz
-import requests
 from discord.ext import commands, tasks
 
 # Local
@@ -257,9 +256,22 @@ class MyClient(commands.Bot):
 
     @tasks.loop(seconds=7)
     async def safety_check_loop(self):
-        safety_check = requests.get(f"{owo_dusk_api}/safety_check.json").json()
-        latest_version = requests.get(f"{owo_dusk_api}/version.json").json()
-
+        timeout = aiohttp.ClientTimeout(total=10)
+        try:
+            async with self.session.get(
+                f"{owo_dusk_api}/safety_check.json", timeout=timeout
+            ) as resp:
+                safety_check = await resp.json()
+            async with self.session.get(
+                f"{owo_dusk_api}/version.json", timeout=timeout
+            ) as resp:
+                latest_version = await resp.json()
+        except Exception as e:
+            await self.log(
+                f"Safety check request failed, will retry next cycle: {e}",
+                "#5c0018",
+            )
+            return
         if syst.system.compare_versions(version, safety_check["version"]):
             self.command_handler_status["captcha"] = True
             await self.log(
