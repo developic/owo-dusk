@@ -19,6 +19,7 @@ import time
 
 try:
     from rich.panel import Panel
+    NO_RICH = False
 except ImportError:
     NO_RICH = True
 
