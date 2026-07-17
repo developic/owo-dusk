@@ -12,7 +12,16 @@
 
 from utils.system.system import on_mobile
 
-from . import battery, notification, system
+from . import system
+
+try:
+    from . import battery
+except ImportError:
+    battery = None
+try:
+    from . import notification
+except ImportError:
+    notification = None
 
 if not on_mobile:
     from . import popup

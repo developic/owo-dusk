@@ -18,17 +18,53 @@ from contextlib import contextmanager
 from functools import wraps
 from pathlib import Path
 
-from rich.console import Console
-from rich.terminal_theme import MONOKAI
+try:
+    from utils.errors import catbox
+    from rich.console import Console
+    from rich.terminal_theme import MONOKAI
+    
+    RICH_AVAILABLE = True
+except ImportError:
+    RICH_AVAILABLE = False
+    import utils.colors as clr
 
-from utils.errors import catbox
 
 DISCORD_TOKEN_REGEX = re.compile(
     r"\b[A-Za-z0-9_-]{24,28}\.[A-Za-z0-9_-]{6,7}\.[A-Za-z0-9_-]{27,}\b"
 )
 
-# Seperate console must be used to prevent recording what is not error
-console = Console(stderr=True, record=True, width=120)
+class ConsolePrinter:
+    def __init__(self):
+        self.color_map = {
+            "[bold yellow]": clr.COLORS.BOLD_YELLOW,
+            "[magenta]": clr.COLORS.BOLD_MAGENTA,
+            "[cyan]": clr.COLORS.BOLD_CYAN,
+            "[dim]": clr.COLORS.RESET,
+            "[bold red]": clr.COLORS.BOLD_RED,
+            "[/bold yellow]": clr.COLORS.RESET,
+            "[/magenta]": clr.COLORS.RESET,
+            "[/cyan]": clr.COLORS.RESET,
+            "[/dim]": clr.COLORS.RESET,
+            "[/bold red]": clr.COLORS.RESET,
+        }
+
+    def _get_colored_string(self, text: str) -> str:
+        for tag, color in self.color_map.items():
+            text = text.replace(tag, color)
+
+        # remove rich formatting
+        text = text.replace("\\[", "[").replace("\\]", "]")
+        return text
+
+    # Either print text provided, or newline if none
+    def print(self, text: str = "\n", *args, **kwargs):
+        print(self._get_colored_string(text))
+
+
+if RICH_AVAILABLE:
+    console = Console(stderr=True, record=True, width=120)
+else:
+    console = ConsolePrinter()
 
 
 def _log_exception(exc: Exception, resource_name: str) -> None:
@@ -56,11 +92,17 @@ def _log_exception(exc: Exception, resource_name: str) -> None:
             f"[bold red]\\[Unexpected][/bold red] Failure in "
             f"[magenta]'{resource_name}'[/magenta] ⇨ [dim]{location}[/dim]"
         )
-        console.print_exception(
-            show_locals=False, word_wrap=True, width=shutil.get_terminal_size().columns
-        )
+        if RICH_AVAILABLE:
+            console.print_exception(
+                show_locals=False,
+                word_wrap=True,
+                width=shutil.get_terminal_size().columns,
+            )
+        else:
+            traceback.print_exc()
 
-    _upload_error_image()
+    if RICH_AVAILABLE:
+        _upload_error_image()
 
 
 def _redact_discord_tokens(text: str) -> str:

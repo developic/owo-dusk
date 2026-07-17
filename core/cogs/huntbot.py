@@ -160,6 +160,9 @@ class Huntbot(BaseCog):
                 self.upgrade_event.set()
                 await self.bot.remove_queue(id="upgrade")
             elif "Here is your password!" in message.content:
+                # When running multiple ids, answer will take longer
+                # To be recieved. We don't want retrier to mess up within that time.
+                await self.bot.remove_queue(id="huntbot")
                 ans = await solve_hb_captcha(
                     message.attachments[0].url, self.bot.session
                 )
