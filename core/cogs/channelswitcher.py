@@ -57,6 +57,7 @@ class ChannelSwitcher(BaseCog):
             "on_channel_switch",
             new_channel_name=new_channel.name,
             new_channel_id=new_channel.id,
+            new_channel_guild=new_channel.guild,
         )
 
     async def change_channel(self):
