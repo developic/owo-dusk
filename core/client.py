@@ -256,6 +256,8 @@ class MyClient(commands.Bot):
 
     @tasks.loop(seconds=7)
     async def safety_check_loop(self):
+        if not self.session:
+            return
         timeout = aiohttp.ClientTimeout(total=10)
         try:
             async with self.session.get(
