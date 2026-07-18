@@ -39,7 +39,7 @@ if [ "$IS_TERMUX" = true ]; then
     INSTALL_DIR="$HOME/storage/downloads/owo-dusk"
 else
     #  Linux: check dependencies
-    echo -e "${CYAN}[*] Linux detected — checking dependencies...${NC}"
+    echo -e "${CYAN}[*] Linux/Macos detected — checking dependencies...${NC}"
 
     if ! command -v git &>/dev/null; then
         echo -e "${RED}[!] git is not installed. Please install it and re-run.${NC}"
@@ -57,8 +57,8 @@ else
         exit 1
     fi
 
-    #fix: improve setup checks for missing tk dep (especially on arch)
-    if !  python3 -c "import tkinter" &>/dev/null && ! python -c "import tkinter" &>/dev/null; then
+    # Check whether tkinter is available or not (Linux)
+    if ! python3 -c "import tkinter" &>/dev/null && ! python -c "import tkinter" &>/dev/null; then
 	    echo -e "${RED}[!] Tk (tkinter) is not installed.${NC}"
 	    echo "    Ubuntu/Debian:  sudo apt install python3-tk"
 	    echo "    Arch:           sudo pacman -S tk"
@@ -117,7 +117,7 @@ if [ "$IS_TERMUX" = false ]; then
 fi
 
 #  run setup
-echo -e "${cyan}[*] running setup.py...${nc}"
+echo -e "${CYAN}[*] running setup.py...${NC}"
 $PYTHON setup.py
 
 #  Run main script
